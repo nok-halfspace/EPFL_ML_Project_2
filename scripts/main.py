@@ -12,7 +12,7 @@ def main():
     to_tensor = transforms.ToTensor() #ToTensor transforms the image to a tensor with range [0,1]
     num_images = TRAINING_SIZE
 
-    data_dir = '/Users/natashaklingenbrunn/Desktop/ML_course/CS-433-Project-2/Datasets/training/'
+    data_dir = '../Datasets/training/'
     train_data_filename = data_dir + 'images/'
     train_labels_filename = data_dir + 'groundtruth/'    
 
@@ -22,7 +22,7 @@ def main():
         image_filename = train_data_filename + imageid + ".png"
         if os.path.isfile(image_filename):
             img = Image.open(image_filename)
-            t_img = to_tensor(img).unsqueeze(0)
+            t_img = to_tensor(img).unsqueeze(0) # 1 x 3 x 400 x 400
             imgs.append(t_img)
     print(imgs)
 
