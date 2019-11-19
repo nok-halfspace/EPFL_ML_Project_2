@@ -30,4 +30,9 @@ def main():
     train_labels_filename = data_dir + 'groundtruth/'    
 
     imgs = extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename)
-    
+    labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename)
+
+    # Implement patches 
+    # Training for each patch
+
+main()
