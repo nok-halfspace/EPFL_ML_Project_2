@@ -1,9 +1,5 @@
-Meeting Notes 6.11.19:
+First install all the necessary dependencies
 
-Goal: Logistic Regression
-- importing data
-- training
-- accuracy
-
-
-Fourier Transform
+```bash
+pip3 install -r requirements.txt
+```
