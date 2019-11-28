@@ -80,7 +80,7 @@ def main():
     
     input = imgs
 
-    DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu') 
+    DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     loss = torch.nn.BCELoss()
     model = models.UNET().to(DEVICE)
     optimizer = optim.Adam(model.parameters())
