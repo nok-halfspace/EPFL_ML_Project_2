@@ -44,7 +44,7 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename):
 
 def main():
 
-    data_dir = '../Datasets/training_debug/'
+    data_dir = '../Datasets/training/'
     train_data_filename = data_dir + 'images/'
     train_labels_filename = data_dir + 'groundtruth/'
     patch_h = 32
@@ -56,7 +56,7 @@ def main():
 
     input = torch.Tensor(imgs[:][0])
 
-    DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu') 
+    DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     loss = torch.nn.BCELoss()
     model = models.UNET().to(DEVICE)
     optimize = optim.Adam(model.parameters())
