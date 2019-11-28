@@ -6,9 +6,12 @@ import os
 import models
 import torch.optim as optim
 from torch.autograd import Variable
+import torch.nn.functional as F
 
-TRAINING_SIZE = 20
+#TRAINING_SIZE = 20
+TRAINING_SIZE = 1 # Debug purposes 
 NUM_EPOCHS = 100
+N_CLASSES = 2
 
 # This function returns a list of patches from image (3D),
 # each patch has a size of patch_h * patch_w
@@ -37,35 +40,57 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename):
         if os.path.isfile(image_filename):
             img = Image.open(image_filename)
 
-            t_img = to_tensor(img).unsqueeze(0) # 1 x 3 [rgb] x 400 x 400
-
+            t_img = to_tensor(img) #  3 [rgb] x 400 x 400
             imgs.append(t_img)
+    imgs = torch.stack(imgs)
     return imgs # length TRAINING_SIZE
+
+    # Assign a one-hot label to each pixel of a ground_truth image
+    # can be improved 
+def value_to_class(img):
+    img_labels = img.view(-1) # image to vector 
+    n_pix = img_labels.shape[0]
+    labels_onehot = torch.randn((N_CLASSES,n_pix))
+    foreground_threshold = 0.5  
+    for pix in range(n_pix) : 
+        if img_labels[pix] > foreground_threshold:  # road
+            labels_onehot[:,pix] = torch.tensor([0, 1])
+        else:  # bgrd
+            labels_onehot[:,pix] = torch.tensor([1, 0])
+    return labels_onehot
+
 
 def main():
 
-    data_dir = '../Datasets/training_debug/'
+    data_dir = '../Datasets/training/'
     train_data_filename = data_dir + 'images/'
     train_labels_filename = data_dir + 'groundtruth/'
-    patch_h = 32
-    patch_w = 32
+    
+    #Patches not needed anymore 
+    #patch_h = 32
+    #patch_w = 32
 
 
     imgs =  extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename)
-    labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename)
+    labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename) 
+    labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
+    labels_onehot = [value_to_class(labels[i]) for i in range(TRAINING_SIZE)]
+    labels_onehot = torch.stack(labels_onehot)
 
-    input = torch.Tensor(imgs[:][0])
+    
+    input = imgs
 
     DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu') 
     loss = torch.nn.BCELoss()
     model = models.UNET().to(DEVICE)
-    optimize = optim.Adam(model.parameters())
+    optimizer = optim.Adam(model.parameters())
+    
+    output = model(input).view(TRAINING_SIZE,N_CLASSES,-1) # reshape output to vector 
+    loss = loss(output, labels_onehot)
+    loss.backward()
+    optimizer.step()
 
-    output = loss(model(input), labels)
-    output.backward()
-
-    print(output)
 
 
 if __name__== "__main__":
-    main()
+       main()
