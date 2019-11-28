@@ -3,6 +3,9 @@ from PIL import Image
 import torch
 import torch.nn as nn
 import os
+import models
+import torch.optim as optim
+from torch.autograd import Variable
 
 TRAINING_SIZE = 20
 NUM_EPOCHS = 100
@@ -40,29 +43,29 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename):
     return imgs # length TRAINING_SIZE
 
 def main():
-    print("main")
+
     data_dir = '../Datasets/training/'
     train_data_filename = data_dir + 'images/'
     train_labels_filename = data_dir + 'groundtruth/'
     patch_h = 32
     patch_w = 32
 
-    imgs_patches = []
-    label_patches = []
-    imgs = extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename)
+
+    imgs =  extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename)
     labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename)
 
-    # Implement patches
-    for i in range(1, len(imgs)):
-        imgs_patches.append(getPatches(imgs[i][0], patch_h, patch_w))
-        # print(imgs_patches[-1])
+    input = torch.Tensor(imgs[:][0])
 
-    print(labels[-1].shape)
-    for i in range(1, len(imgs)):
-        label_patches.append(getPatches(labels[i][0], patch_h, patch_w))
-        print(label_patches[-1])
+    DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    loss = torch.nn.BCELoss()
+    model = models.UNET().to(DEVICE)
+    optimize = optim.Adam(model.parameters())
 
-    # Training for each patch
+    output = loss(model(input), labels)
+    output.backward()
+
+    print(output)
+
 
 if __name__== "__main__":
     main()
