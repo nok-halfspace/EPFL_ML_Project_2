@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from constants import *
+import torch.optim as optim
+
 
 
 # -------------------------------------------
@@ -59,7 +62,7 @@ class UNET(nn.Module):
         tmp_channels = in_channels // 2
         output_block = torch.nn.Sequential(
             self.doubleConv_block(in_channels, tmp_channels),
-            torch.nn.Conv2d(in_channels = tmp_channels, out_channels = out_channels, kernel_size = 1)
+            torch.nn.Conv2d(in_channels = tmp_channels, out_channels = out_channels, kernel_size = 1),
         )
         return output_block
      
@@ -105,6 +108,17 @@ class UNET(nn.Module):
         print('layer1a', layer1_ascending.shape)
 
         output = self.output(self.concatenating_block(layer1_descending, layer1_ascending))
+        # To have outputs between 0 and 1 
+        output = torch.sigmoid(output)
         print('output', output.shape)
         
         return output
+    
+    
+def create_UNET():
+    network = UNET()
+    network.to(DEVICE)
+    criterion = nn.BCELoss()
+    optimizer = optim.Adam(network.parameters())
+    return network, criterion, optimizer
+    

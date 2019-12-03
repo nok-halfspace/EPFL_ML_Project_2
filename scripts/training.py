@@ -1,10 +1,14 @@
 import torch
 import matplotlib.pyplot as plt
 import numpy as np 
+import sklearn.metrics as metrics
 
 from constants import *
 
-# TO DO : define a score 
+
+# Chosen score : F1 metrics to be in accordance with AIcrowd
+def score(y_true,y_pred):
+    return metrics.f1_score(y_true, y_pred)
 
 def split_data(x,y,ratio, seed = 1):
     

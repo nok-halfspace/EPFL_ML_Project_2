@@ -3,10 +3,11 @@ from PIL import Image
 import torch
 import torch.nn as nn
 import os
-import models
+from models import * 
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
+import sklearn.metrics as metrics
 
 #TRAINING_SIZE = 20
 TRAINING_SIZE = 1 # Debug purposes 
@@ -46,7 +47,7 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename):
     return imgs # length TRAINING_SIZE
 
     # Assign a one-hot label to each pixel of a ground_truth image
-    # can be improved 
+    # can be improved usign scatter probably
 def value_to_class(img):
     img_labels = img.view(-1) # image to vector 
     n_pix = img_labels.shape[0]
@@ -77,19 +78,13 @@ def main():
     labels_onehot = [value_to_class(labels[i]) for i in range(TRAINING_SIZE)]
     labels_onehot = torch.stack(labels_onehot)
 
-    
-    input = imgs
 
-    DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    loss = torch.nn.BCELoss()
-    model = models.UNET().to(DEVICE)
-    optimizer = optim.Adam(model.parameters())
+    model, loss, optimizer = create_UNET()
+    outputs = model(imgs)
     
-    output = model(input).view(TRAINING_SIZE,N_CLASSES,-1) # reshape output to vector 
-    loss = loss(output, labels_onehot)
-    loss.backward()
-    optimizer.step()
-
+    return(outputs)
+    
+    #val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, score, x, y, epochs, ratio=0.2)
 
 
 if __name__== "__main__":
