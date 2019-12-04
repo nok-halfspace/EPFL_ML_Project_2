@@ -111,7 +111,7 @@ class UNET(nn.Module):
         # To have outputs between 0 and 1 
         output = torch.sigmoid(output)
         print('output', output.shape)
-        
+         
         return output
     
     

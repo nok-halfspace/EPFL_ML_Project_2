@@ -7,12 +7,19 @@ from models import *
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
+from training import training
 import sklearn.metrics as metrics
+import constants
 
-#TRAINING_SIZE = 20
-TRAINING_SIZE = 1 # Debug purposes 
-NUM_EPOCHS = 100
-N_CLASSES = 2
+'''
+Everyone: Refresh entire code, add comments !
+          Data Augmentation Procedures
+
+Clara: f1-score
+Natasha: converting to submission file
+Daniel: uploading to cloud to compute
+
+'''
 
 # This function returns a list of patches from image (3D),
 # each patch has a size of patch_h * patch_w
@@ -66,26 +73,23 @@ def main():
     data_dir = '../Datasets/training/'
     train_data_filename = data_dir + 'images/'
     train_labels_filename = data_dir + 'groundtruth/'
-    
-    #Patches not needed anymore 
-    #patch_h = 32
-    #patch_w = 32
-
+    epochs = NUM_EPOCHS
 
     imgs =  extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename)
     labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename) 
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
-    labels_onehot = [value_to_class(labels[i]) for i in range(TRAINING_SIZE)]
-    labels_onehot = torch.stack(labels_onehot)
-
+    labels_onehot = [value_to_class(labels[i]) for i in range(TRAINING_SIZE)] # one hot output
+    labels_onehot = torch.stack(labels_onehot) # torch object of list
 
     model, loss, optimizer = create_UNET()
     outputs = model(imgs)
-    
-    return(outputs)
-    
-    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, score, x, y, epochs, ratio=0.2)
+
+    outputs = outputs.view(TRAINING_SIZE, N_CLASSES, -1)
+    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_onehot, epochs, ratio=0.5)
+
+    return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
 
 if __name__== "__main__":
-       main()
+       val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
+       print(val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist)

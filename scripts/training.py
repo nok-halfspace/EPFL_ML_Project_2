@@ -7,18 +7,38 @@ from constants import *
 
 
 # Chosen score : F1 metrics to be in accordance with AIcrowd
+'''
+Fix F1 score, probably manually compute it
+'''
 def score(y_true,y_pred):
-    return metrics.f1_score(y_true, y_pred)
+    print(y_true)
+    print(y_true.shape)
+    print(y_pred)
+    print(y_pred.shape)
+
+    y_true = torch.argmax(y_pred, dim=1)
+    y_pred =  torch.argmax(y_pred, dim=1)
+    f1 = 0
+    return f1
+    # f1 = metrics.f1_score(y_true, y_pred, average=None)
+    # print(y_pred[i] for i in range(y_pred.shape[0]))
+    # true_positive = [y_true[i] == [0,1] and y_pred[i] == [0,1] for i in range(y_true.shape[0])]
+    # true_negative = [y_true[i] == [1,0] and y_pred[i] == [1,0] for i in range(y_true.shape[0])]
+    # false_positive = [y_true[i] == [1,0] and y_pred[i] == [0,1] for i in range(y_true.shape[0])]
+    # false_negative = [y_true[i] == [0,1] and y_pred[i] == [1,0] for i in range(y_true.shape[0])]
+    # precision = sum(true_positive)/sum(true_positive)+sum(false_positive)
+    # recall = sum(true_positive)/sum(true_positive)+sum(false_negative)
+    # f1 = 2 * (precision * recall) / (precision + recall)
 
 def split_data(x,y,ratio, seed = 1):
-    
+    print(x.shape)
     """split the dataset based on the split ratio."""
     # set seed
     np.random.seed(seed)
     # generate random indices
-    num_row = len(x.shape[0])
-    indices = np.random.permutation(num_row)
-    index_split = int(np.floor(ratio * num_row))
+    num_img = x.shape[0]
+    indices = np.random.permutation(num_img)
+    index_split = int(np.floor(ratio * num_img))
     index_tr = indices[: index_split]
     index_val = indices[index_split:]
     # create split
@@ -30,13 +50,13 @@ def split_data(x,y,ratio, seed = 1):
             
 
 
-def training(network, loss_function, optimizer, score, x, y, epochs, ratio=0.2):
+def training(model, loss_function, optimizer, x, y, epochs, ratio):
     val_loss_hist = []
     val_acc_hist = []
     train_acc_hist = []
     train_loss_hist = []
     
-    x,y,val_x,val_y = split_data(x, y, ratio)
+    x,val_x,y, val_y = split_data(x, y, ratio)
     
     for epoch in range(epochs):
         loss_value = 0.0
@@ -44,10 +64,10 @@ def training(network, loss_function, optimizer, score, x, y, epochs, ratio=0.2):
         for i in range(0,x.shape[0],BATCH_SIZE):
             data_inputs = x[i:BATCH_SIZE+i]
             data_targets = y[i:BATCH_SIZE+i]
-
             #Traning step
             optimizer.zero_grad()
-            outputs = network(data_inputs)
+            outputs = model(data_inputs)
+            outputs = outputs.view(BATCH_SIZE, N_CLASSES, -1) 
             loss = loss_function(outputs, data_targets)
             loss.backward()
             optimizer.step()
@@ -60,7 +80,7 @@ def training(network, loss_function, optimizer, score, x, y, epochs, ratio=0.2):
         accuracy = correct/x.shape[0]
         
         #Validation prediction
-        outputs = network(val_x)
+        outputs = model(val_x)
         val_loss = loss_function(outputs,val_y) / val_x.shape[0]
         val_acc = score(val_y,outputs)/val_x.shape[0]
         
