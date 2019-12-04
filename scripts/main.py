@@ -84,7 +84,7 @@ def main():
     
     return(outputs)
     
-    #val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, score, x, y, epochs, ratio=0.2)
+    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, score, x, y, epochs, ratio=0.2)
 
 
 if __name__== "__main__":
