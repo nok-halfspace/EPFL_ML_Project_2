@@ -34,11 +34,13 @@ def getPatches(image, patch_h, patch_w):
             patches.append(patch)
     return patches
 
-def extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename):
+def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save = False):
 
+    train_data_filename = data_dir + path
     to_tensor = transforms.ToTensor() #ToTensor transforms the image to a tensor with range [0,1]
     num_images = TRAINING_SIZE
     imgs = []
+    r_imgs = []
 
     for i in range(1, num_images+1):
 
@@ -47,11 +49,28 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename):
         print(image_filename)
         if os.path.isfile(image_filename):
             img = Image.open(image_filename)
-
-            t_img = to_tensor(img) #  3 [rgb] x 400 x 400
+            t_img = to_tensor(img).unsqueeze(0) # 1 x 3 [rgb] x 400 x 400
             imgs.append(t_img)
-    imgs = torch.stack(imgs)
-    return imgs # length TRAINING_SIZE
+
+            if (rotate == True):
+                width, height = img.size
+                # Rotate images
+
+                for degree in range(360):
+                    rotated_img = img.rotate(degree)
+                    # Crop to remove black parts
+                    left     = width / 4 * 0.58
+                    top      = height / 4 * 0.58
+                    right    = width - left
+                    bottom   = height - top
+                    rotated_img = rotated_img.crop((left, top, right, bottom))
+                    if (save == True):
+                        # optional, save new image on disk, to see the effect
+                        rotated_img.save("../Rotations/"+path + imageid + "_"+str(degree)+".png")
+                    rt_img = to_tensor(rotated_img).unsqueeze(0) # 1 x 3 [rgb] x 284 x 284
+                    r_imgs.append(rt_img)
+
+    return imgs, r_imgs
 
     # Assign a one-hot label to each pixel of a ground_truth image
     # can be improved usign scatter probably
@@ -71,15 +90,20 @@ def value_to_class(img):
 def main():
 
     data_dir = '../Datasets/training/'
-    train_data_filename = data_dir + 'images/'
-    train_labels_filename = data_dir + 'groundtruth/'
-    epochs = NUM_EPOCHS
+    train_data_filename = 'images/'
+    train_labels_filename = 'groundtruth/'
+    patch_h = 32
+    patch_w = 32
 
-    imgs =  extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename)
-    labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename) 
+
+    imgs, r_imgs =  extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename, True)
+    labels, r_labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename, True)
+    
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
     labels_onehot = [value_to_class(labels[i]) for i in range(TRAINING_SIZE)] # one hot output
     labels_onehot = torch.stack(labels_onehot) # torch object of list
+
+    input = torch.Tensor(imgs[:][0])
 
     model, loss, optimizer = create_UNET()
     outputs = model(imgs)
