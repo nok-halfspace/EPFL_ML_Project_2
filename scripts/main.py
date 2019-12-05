@@ -104,7 +104,8 @@ def main():
     labels_onehot = torch.stack(labels_onehot) # torch object of list
 
     input = torch.Tensor(imgs[:][0])
-
+    epochs = NUM_EPOCHS
+    
     model, loss, optimizer = create_UNET()
     outputs = model(imgs)
 
