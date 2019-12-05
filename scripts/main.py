@@ -49,7 +49,7 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save =
         print(image_filename)
         if os.path.isfile(image_filename):
             img = Image.open(image_filename)
-            t_img = to_tensor(img).unsqueeze(0) # 1 x 3 [rgb] x 400 x 400
+            t_img = to_tensor(img) #3 [rgb] x 400 x 400
             imgs.append(t_img)
 
             if (rotate == True):
@@ -67,12 +67,12 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save =
                     if (save == True):
                         # optional, save new image on disk, to see the effect
                         rotated_img.save("../Rotations/"+path + imageid + "_"+str(degree)+".png")
-                    rt_img = to_tensor(rotated_img).unsqueeze(0) # 1 x 3 [rgb] x 284 x 284
+                    rt_img = to_tensor(rotated_img) # 3 [rgb] x 284 x 284
                     r_imgs.append(rt_img)
         else:
             print(image_filename, "is not a file, follow the README instruction to run the project. (check path)", file=sys.stderr)
             sys.exit()
-
+    imgs, r_imgs = torch.stack(imgs), torch.stack(r_imgs)
     return imgs, r_imgs
 
     # Assign a one-hot label to each pixel of a ground_truth image
