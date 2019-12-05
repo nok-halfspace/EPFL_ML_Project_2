@@ -3,12 +3,23 @@ from PIL import Image
 import torch
 import torch.nn as nn
 import os
-import models
+from models import * 
 import torch.optim as optim
 from torch.autograd import Variable
+import torch.nn.functional as F
+from training import training
+import sklearn.metrics as metrics
+import constants
 
-TRAINING_SIZE = 20
-NUM_EPOCHS = 100
+'''
+Everyone: Refresh entire code, add comments !
+          Data Augmentation Procedures
+
+Clara: f1-score
+Natasha: converting to submission file
+Daniel: uploading to cloud to compute
+
+'''
 
 # This function returns a list of patches from image (3D),
 # each patch has a size of patch_h * patch_w
@@ -61,6 +72,21 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save =
 
     return imgs, r_imgs
 
+    # Assign a one-hot label to each pixel of a ground_truth image
+    # can be improved usign scatter probably
+def value_to_class(img):
+    img_labels = img.view(-1) # image to vector 
+    n_pix = img_labels.shape[0]
+    labels_onehot = torch.randn((N_CLASSES,n_pix))
+    foreground_threshold = 0.5  
+    for pix in range(n_pix) : 
+        if img_labels[pix] > foreground_threshold:  # road
+            labels_onehot[:,pix] = torch.tensor([0, 1])
+        else:  # bgrd
+            labels_onehot[:,pix] = torch.tensor([1, 0])
+    return labels_onehot
+
+
 def main():
 
     data_dir = '../Datasets/training/'
@@ -72,19 +98,22 @@ def main():
 
     imgs, r_imgs =  extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename, True)
     labels, r_labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename, True)
+    
+    labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
+    labels_onehot = [value_to_class(labels[i]) for i in range(TRAINING_SIZE)] # one hot output
+    labels_onehot = torch.stack(labels_onehot) # torch object of list
 
     input = torch.Tensor(imgs[:][0])
 
-    DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    loss = torch.nn.BCELoss()
-    model = models.UNET().to(DEVICE)
-    optimize = optim.Adam(model.parameters())
+    model, loss, optimizer = create_UNET()
+    outputs = model(imgs)
 
-    output = loss(model(input), labels)
-    output.backward()
+    outputs = outputs.view(TRAINING_SIZE, N_CLASSES, -1)
+    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_onehot, epochs, ratio=0.5)
 
-    print(output)
+    return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
 
 if __name__== "__main__":
-    main()
+       val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
+       print(val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist)

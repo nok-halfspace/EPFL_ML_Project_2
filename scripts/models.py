@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from constants import *
+import torch.optim as optim
+
 
 
 # -------------------------------------------
@@ -22,10 +25,10 @@ class UNET(nn.Module):
         self.maxpool = torch.nn.MaxPool2d(kernel_size = 2)
                 
         # Expansive path
-        self.expand4 = self.expanding_block(512, 1024)
-        self.expand3 = self.expanding_block(1024, 512)
-        self.expand2 = self.expanding_block(512, 256)
-        self.expand1 = self.expanding_block(256, 128)
+        self.expand5 = self.expanding_block(512, 1024)
+        self.expand4 = self.expanding_block(1024, 512)
+        self.expand3 = self.expanding_block(512, 256)
+        self.expand2 = self.expanding_block(256, 128)
         
         # Final block
         self.output = self.output_block(128, out_channels)
@@ -59,33 +62,63 @@ class UNET(nn.Module):
         tmp_channels = in_channels // 2
         output_block = torch.nn.Sequential(
             self.doubleConv_block(in_channels, tmp_channels),
-            torch.nn.Conv2d(in_channels = tmp_channels, out_channels = out_channels, kernel_size = 1)
+            torch.nn.Conv2d(in_channels = tmp_channels, out_channels = out_channels, kernel_size = 1),
         )
         return output_block
      
     def concatenating_block(self, x_contracting, x_expanding):
-        delta = (x_contracting.size()[2] - x_expanding.size()[2]) // 2 
-        x_cropped = F.pad(x_contracting, (-delta, -delta, -delta, -delta))
+        delta2 = (x_contracting.size()[2] - x_expanding.size()[2])
+        delta = delta2 // 2 
+        if delta2 % 2 == 0 :
+        # see which type of padding to apply
+            x_cropped = F.pad(x_contracting, (-delta, -delta, -delta, -delta))
+        else : 
+            x_cropped = F.pad(x_contracting, (-delta - 1, -delta, -delta - 1, -delta))
         return torch.cat([x_cropped, x_expanding], dim = 1)
      
         
     def forward(self, layer0): 
         # Padding with reflection 
-        # pad size found such that after doing all the convolutions n_out = n_in <=> n_padded = n_in + 184 (to be verified)
-        pad = 92
+        # pad size found such that after doing all the convolutions n_out = n_in <=> n_padded = n_in + 194 (to be verified)
+        # Can't obtain a perfect padding to obtain a 200 * 200 image in the end : pad of 93 => final image 388 * 388 / pad of 94 => 404 * 404 
+        pad = 94
         layer0 = F.pad(layer0, (pad, pad, pad, pad), mode = 'reflect')
+        print('layer0', layer0.shape)
 
         layer1_descending = self.contract1(layer0)
+        print('layer1d', layer1_descending.shape)
         layer2_descending = self.contract2(self.maxpool(layer1_descending))
+        print('layer2d', layer2_descending.shape)
         layer3_descending = self.contract3(self.maxpool(layer2_descending))
+        print('layer3d', layer3_descending.shape)
         layer4_descending = self.contract4(self.maxpool(layer3_descending))
+        print('layer4d', layer4_descending.shape)
         layer5 = self.maxpool(layer4_descending)
-
-        layer4_ascending = self.expand4(self.concatenating_block(layer4_descending, layer5))
-        layer3_ascending = self.expand3(self.concatenating_block(layer3_descending, layer4_ascending))
-        layer2_ascending = self.expand2(self.concatenating_block(layer2_descending, layer3_ascending))
-        layer1 = self.expand1(self.concatenating_block(layer1_descending, layer2_ascending))
-
-        output = self.output(layer1)
+        print('layer5', layer5.shape)
         
+  
+        # _ascending = input of the layer
+        layer4_ascending = self.expand5(layer5)
+        print('layer4a', layer4_ascending.shape)
+        layer3_ascending = self.expand4(self.concatenating_block(layer4_descending, layer4_ascending))
+        print('layer3a', layer3_ascending.shape)
+        layer2_ascending = self.expand3(self.concatenating_block(layer3_descending, layer3_ascending))
+        print('layer2a', layer2_ascending.shape)
+        layer1_ascending = self.expand2(self.concatenating_block(layer2_descending, layer2_ascending))
+        print('layer1a', layer1_ascending.shape)
+
+        output = self.output(self.concatenating_block(layer1_descending, layer1_ascending))
+        # To have outputs between 0 and 1 
+        output = torch.sigmoid(output)
+        print('output', output.shape)
+         
         return output
+    
+    
+def create_UNET():
+    network = UNET()
+    network.to(DEVICE)
+    criterion = nn.BCELoss()
+    optimizer = optim.Adam(network.parameters())
+    return network, criterion, optimizer
+    
