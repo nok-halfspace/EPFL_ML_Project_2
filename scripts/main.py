@@ -3,7 +3,8 @@ from PIL import Image
 import torch
 import torch.nn as nn
 import os
-from models import * 
+import sys
+from models import *
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
@@ -35,7 +36,6 @@ def getPatches(image, patch_h, patch_w):
     return patches
 
 def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save = False):
-
     train_data_filename = data_dir + path
     to_tensor = transforms.ToTensor() #ToTensor transforms the image to a tensor with range [0,1]
     num_images = TRAINING_SIZE
@@ -69,17 +69,20 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save =
                         rotated_img.save("../Rotations/"+path + imageid + "_"+str(degree)+".png")
                     rt_img = to_tensor(rotated_img).unsqueeze(0) # 1 x 3 [rgb] x 284 x 284
                     r_imgs.append(rt_img)
+        else:
+            print(image_filename, "is not a file, follow the README instruction to run the project. (check path)", file=sys.stderr)
+            sys.exit()
 
     return imgs, r_imgs
 
     # Assign a one-hot label to each pixel of a ground_truth image
     # can be improved usign scatter probably
 def value_to_class(img):
-    img_labels = img.view(-1) # image to vector 
+    img_labels = img.view(-1) # image to vector
     n_pix = img_labels.shape[0]
     labels_onehot = torch.randn((N_CLASSES,n_pix))
-    foreground_threshold = 0.5  
-    for pix in range(n_pix) : 
+    foreground_threshold = 0.5
+    for pix in range(n_pix) :
         if img_labels[pix] > foreground_threshold:  # road
             labels_onehot[:,pix] = torch.tensor([0, 1])
         else:  # bgrd
@@ -92,13 +95,10 @@ def main():
     data_dir = '../Datasets/training/'
     train_data_filename = 'images/'
     train_labels_filename = 'groundtruth/'
-    patch_h = 32
-    patch_w = 32
-
 
     imgs, r_imgs =  extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename, True)
     labels, r_labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename, True)
-    
+
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
     labels_onehot = [value_to_class(labels[i]) for i in range(TRAINING_SIZE)] # one hot output
     labels_onehot = torch.stack(labels_onehot) # torch object of list
