@@ -2,7 +2,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import torch
 import torch.nn as nn
-import os
+import os, math
 import sys
 from models import *
 import torch.optim as optim
@@ -11,13 +11,14 @@ import torch.nn.functional as F
 from training import training
 import sklearn.metrics as metrics
 import constants
+import tensorflow as tf
 
 '''
 Everyone: Refresh entire code, add comments !
           Data Augmentation Procedures
 
 Clara: f1-score
-Natasha: converting to submission file
+Natasha: converting to submission file: something like 001_208_304,0
 Daniel: uploading to cloud to compute
 
 '''
@@ -75,6 +76,40 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save =
     imgs, r_imgs = torch.stack(imgs), torch.stack(r_imgs)
     return imgs, r_imgs
 
+def extract_feature_vectors2(path, image_filename, rotate = True, save = False):
+
+    to_tensor = transforms.ToTensor() #ToTensor transforms the image to a tensor with range [0,1]
+    imgs = []
+    r_imgs = []
+
+    if os.path.isfile(path + image_filename):
+        img = Image.open(path + image_filename)
+        t_img = to_tensor(img) #3 [rgb] x 400 x 400
+        imgs.append(t_img)
+
+        if (rotate == True):
+            width, height = img.size
+            # Rotate images
+
+            for degree in range(360):
+                rotated_img = img.rotate(degree)
+                # Crop to remove black parts
+                left     = width / 4 * 0.58
+                top      = height / 4 * 0.58
+                right    = width - left
+                bottom   = height - top
+                rotated_img = rotated_img.crop((left, top, right, bottom))
+                if (save == True):
+                    # optional, save new image on disk, to see the effect
+                    rotated_img.save("../Rotations/"+ image_filename + "_"+str(degree)+".png")
+                rt_img = to_tensor(rotated_img) # 3 [rgb] x 284 x 284
+                r_imgs.append(rt_img)
+    else:
+        print(image_filename, "is not a file, follow the README instruction to run the project. (check path)", file=sys.stderr)
+        sys.exit()
+    imgs, r_imgs = torch.stack(imgs), torch.stack(r_imgs)
+    return imgs, r_imgs
+
     # Assign a one-hot label to each pixel of a ground_truth image
     # can be improved usign scatter probably
 def value_to_class(img):
@@ -93,6 +128,7 @@ def value_to_class(img):
 def main():
 
     data_dir = '../Datasets/training/'
+    test_dir = '../Datasets/test_set_images/'
     train_data_filename = 'images/'
     train_labels_filename = 'groundtruth/'
 
@@ -105,16 +141,53 @@ def main():
 
     input = torch.Tensor(imgs[:][0])
     epochs = NUM_EPOCHS
-    
+
     model, loss, optimizer = create_UNET()
     outputs = model(imgs)
+    
+    outputs = outputs.view(TRAINING_SIZE, N_CLASSES, outputs.shape[2], outputs.shape[2])
 
-    outputs = outputs.view(TRAINING_SIZE, N_CLASSES, -1)
+    print("a", outputs.shape)
+    print("b", outputs)
+
     val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_onehot, epochs, ratio=0.5)
 
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
+
+    ## Skeleton for testing the data set
+    test_folders = [x[0] for x in os.walk(test_dir)]
+    results = []
+    for folder in test_folders:
+        for image in os.walk(folder):
+            try:
+                path = image[0]+"/"
+                image_filename = image[2][0]
+                imgs, r_imgs = extract_feature_vectors2(path, image_filename, True)
+                output = model(imgs) # run image through the nn
+                outputs = outputs.view(TRAINING_SIZE, N_CLASSES, outputs.shape[2], outputs.shape[2])
+                ## from here the output has the shape torch.Size([2, 2, 404, 404])
+                ## need to remove padding here first !!! ***Not Implemented - depends on size of padding !*
+                ## then let's say I have an output like nat = tf.ones([2, 2, 400, 400], tf.int32)
+                patches = tf.reshape(output, [TRAINING_SIZE, N_CLASSES, 16, 16, -1])
+                ## after this i have the shape=(2, 2, 16, 16, 625), e.g. the 625 patches of 16 x 16 ! 
+                num_patches = output.shape[4] #625
+                for x in range(math.sqrt(num_patches)):
+                    for y in range(math.sqrt(num_patches)):
+                        x_coord = 16*x
+                        y_coord = 16*y
+                        ## find if there is a 1 in the 16 x 16 square below **Not Implemented**
+                        b = 1  # Lets say it is 1
+                a = image, "_", x_coord, "_", y_coord
+                results.append([a , b])
+                ## output image_x_y , classification
+            except:
+                print("folder: ", folder, "not parsed")
+    return results
+
 
 
 if __name__== "__main__":
        val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
        print(val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist)
+
+

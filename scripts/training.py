@@ -31,7 +31,7 @@ def score(y_true,y_pred):
     # f1 = 2 * (precision * recall) / (precision + recall)
 
 def split_data(x,y,ratio, seed = 1):
-    print(x.shape)
+
     """split the dataset based on the split ratio."""
     # set seed
     np.random.seed(seed)
