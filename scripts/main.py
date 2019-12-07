@@ -103,6 +103,7 @@ def main():
     labels, r_labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename, True)
 
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
+    
     labels_bin =  torch.stack([value_to_class(labels[i]) for i in range(TRAINING_SIZE)])
     print(labels_bin.type())
     
