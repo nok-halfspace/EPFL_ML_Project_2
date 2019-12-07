@@ -83,8 +83,8 @@ class UNET(nn.Module):
         layer0 = F.pad(layer0, (pad, pad, pad, pad), mode = 'reflect')
         print('layer0', layer0.shape)
 
-        layer = self.contract1(layer0)
-        print('layer1d', layer.shape)
+        layer1_descending = self.contract1(layer0)
+        print('layer1d', layer1_descending.shape)
         layer2_descending = self.contract2(self.maxpool(layer1_descending))
         print('layer2d', layer2_descending.shape)
         layer3_descending = self.contract3(self.maxpool(layer2_descending))
