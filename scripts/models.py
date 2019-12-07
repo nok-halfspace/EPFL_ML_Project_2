@@ -32,6 +32,7 @@ class UNET(nn.Module):
         
         # Final block
         self.output = self.output_block(128, out_channels)
+
             
     
     def doubleConv_block(self, in_channels, out_channels):
@@ -108,9 +109,12 @@ class UNET(nn.Module):
         print('layer1a', layer1_ascending.shape)
 
         output = self.output(self.concatenating_block(layer1_descending, layer1_ascending))
-        # To have outputs between 0 and 1 
-        output = torch.sigmoid(output)
         print('output', output.shape)
+        
+        # Converting into vector
+        #output = output.view(TRAINING_SIZE, N_CLASSES, -1)
+        #print('output vector', output.shape)
+        #finally no need to convert into vector with nn.crossentropy.loss
          
         return output
     
@@ -118,7 +122,7 @@ class UNET(nn.Module):
 def create_UNET():
     network = UNET()
     network.to(DEVICE)
-    criterion = nn.BCELoss()
+    criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(network.parameters())
     return network, criterion, optimizer
     

@@ -10,25 +10,27 @@ from constants import *
 '''
 Fix F1 score, probably manually compute it
 '''
-def score(y_true,y_pred):
-    print(y_true)
-    print(y_true.shape)
-    print(y_pred)
-    print(y_pred.shape)
+def score(y_true,y_pred_onehot):
+     
+    softMax = torch.nn.Softmax(1)
+    y_pred = torch.argmax(softMax(y_pred_onehot),1)
+    
+    y_true_0 = y_true == 0
+    y_pred_0 = y_pred == 0
 
-    y_true = torch.argmax(y_pred, dim=1)
-    y_pred =  torch.argmax(y_pred, dim=1)
-    f1 = 0
+    y_true_1 = y_true == 1
+    y_pred_1 = y_pred == 1
+
+    true_negative_nb = len(y_true[y_true_0 & y_pred_0])
+    false_negative_nb = len(y_true[y_true_1 & y_pred_0])
+    true_positive_nb = len(y_true[y_true_1 & y_pred_1])
+    false_positive_nb = len(y_true[y_true_0 & y_pred_1])
+    
+    precision = true_positive_nb /(true_positive_nb + false_positive_nb)
+    recall = true_positive_nb / (true_positive_nb + false_negative_nb)
+    
+    f1 = 2 * (precision * recall) / (precision + recall)
     return f1
-    # f1 = metrics.f1_score(y_true, y_pred, average=None)
-    # print(y_pred[i] for i in range(y_pred.shape[0]))
-    # true_positive = [y_true[i] == [0,1] and y_pred[i] == [0,1] for i in range(y_true.shape[0])]
-    # true_negative = [y_true[i] == [1,0] and y_pred[i] == [1,0] for i in range(y_true.shape[0])]
-    # false_positive = [y_true[i] == [1,0] and y_pred[i] == [0,1] for i in range(y_true.shape[0])]
-    # false_negative = [y_true[i] == [0,1] and y_pred[i] == [1,0] for i in range(y_true.shape[0])]
-    # precision = sum(true_positive)/sum(true_positive)+sum(false_positive)
-    # recall = sum(true_positive)/sum(true_positive)+sum(false_negative)
-    # f1 = 2 * (precision * recall) / (precision + recall)
 
 def split_data(x,y,ratio, seed = 1):
     print(x.shape)
@@ -67,7 +69,6 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             #Traning step
             optimizer.zero_grad()
             outputs = model(data_inputs)
-            outputs = outputs.view(BATCH_SIZE, N_CLASSES, -1) 
             loss = loss_function(outputs, data_targets)
             loss.backward()
             optimizer.step()

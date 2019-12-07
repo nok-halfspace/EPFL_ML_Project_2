@@ -10,7 +10,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from training import training
 import sklearn.metrics as metrics
-import constants
+from constants import * 
 
 '''
 Everyone: Refresh entire code, add comments !
@@ -77,17 +77,20 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save =
 
     # Assign a one-hot label to each pixel of a ground_truth image
     # can be improved usign scatter probably
+    # or see how it is done in the tf_aerial.py
 def value_to_class(img):
-    img_labels = img.view(-1) # image to vector
-    n_pix = img_labels.shape[0]
-    labels_onehot = torch.randn((N_CLASSES,n_pix))
+    img = img.squeeze()
+    H = img.shape[0]
+    W = img.shape[1]
+    labels = torch.randn((H,W))
     foreground_threshold = 0.5
-    for pix in range(n_pix) :
-        if img_labels[pix] > foreground_threshold:  # road
-            labels_onehot[:,pix] = torch.tensor([0, 1])
-        else:  # bgrd
-            labels_onehot[:,pix] = torch.tensor([1, 0])
-    return labels_onehot
+    for h in range(H) :
+        for w in range(W) :
+            if img[h,w] > foreground_threshold:  # road
+                labels[h,w] = torch.tensor(1.0)
+            else:  # bgrd
+                labels[h,w] = torch.tensor(0.0)
+    return labels.long()
 
 
 def main():
@@ -100,20 +103,19 @@ def main():
     labels, r_labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename, True)
 
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
-    labels_onehot = [value_to_class(labels[i]) for i in range(TRAINING_SIZE)] # one hot output
-    labels_onehot = torch.stack(labels_onehot) # torch object of list
-
-    input = torch.Tensor(imgs[:][0])
-
-    model, loss, optimizer = create_UNET()
-    outputs = model(imgs)
-
-    outputs = outputs.view(TRAINING_SIZE, N_CLASSES, -1)
-    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_onehot, epochs, ratio=0.5)
+    labels_bin =  torch.stack([value_to_class(labels[i]) for i in range(TRAINING_SIZE)])
+    print(labels_bin.type())
+    
+    epochs = NUM_EPOCHS
+    model, loss, optimizer = create_UNET()   
+    
+    
+ 
+    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_bin, epochs, ratio=0.5)
 
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
 
 if __name__== "__main__":
-       val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
-       print(val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist)
+        val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
+        print(val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist)
