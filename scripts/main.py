@@ -3,14 +3,17 @@ from PIL import Image
 import torch
 import torch.nn as nn
 import os
+import psutil
 import sys
 from models import *
+from testing import *
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn.functional as F
 from training import training
 import sklearn.metrics as metrics
-from constants import * 
+from constants import *
+
 
 '''
 Everyone: Refresh entire code, add comments !
@@ -72,8 +75,33 @@ def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save =
         else:
             print(image_filename, "is not a file, follow the README instruction to run the project. (check path)", file=sys.stderr)
             sys.exit()
-    imgs, r_imgs = torch.stack(imgs), torch.stack(r_imgs)
+
+    if rotate:
+        r_imgs = torch.stack(r_imgs)
+    imgs = torch.stack(imgs)
+
     return imgs, r_imgs
+
+
+def readTestImages(test_directory, num_images):
+    imgs = []
+    to_tensor = transforms.ToTensor()
+    current_image_path = ""
+    for i in range(1, num_images+1):
+        current_image_path = test_directory + str(i) + "/test_" + str(i) + ".png"
+        if os.path.isfile(current_image_path):
+            img = Image.open(current_image_path)
+            t_img = to_tensor(img) # 3 [rgb] x 600 x 600
+            imgs.append(t_img)
+
+        else:
+            print(current_image_path, "is not a file, follow the README instruction to run the project. (check path)", file=sys.stderr)
+            sys.exit()
+
+    imgs = torch.stack(imgs)
+    return imgs
+
+
 
     # Assign a one-hot label to each pixel of a ground_truth image
     # can be improved usign scatter probably
@@ -94,29 +122,44 @@ def value_to_class(img):
 
 
 def main():
-
     data_dir = '../Datasets/training/'
+    test_dir = '../Datasets/test_set_images/test_'
+
     train_data_filename = 'images/'
     train_labels_filename = 'groundtruth/'
+    rotateFlag = False
+    # process = psutil.Process(os.getpid())
+    # print(process.memory_info().rss/1024/1024)  # in Mbytes
+    print("Reading test images...")
+    test_imgs = readTestImages(test_dir, NR_TEST_IMAGES)
 
-    imgs, r_imgs =  extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename, True)
-    labels, r_labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename, True)
+    imgs, r_imgs = extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename, rotateFlag)
+    labels, r_labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename, rotateFlag)
 
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
-    
+
     labels_bin =  torch.stack([value_to_class(labels[i]) for i in range(TRAINING_SIZE)])
     print(labels_bin.type())
-    
+
     epochs = NUM_EPOCHS
-    model, loss, optimizer = create_UNET()   
-    
-    
- 
+    model, loss, optimizer = create_UNET()
     val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_bin, epochs, ratio=0.5)
+    filenames_list = test_and_save_predictions(model, test_imgs)
+
+    submissionFileName = "latestSubmission.csv"
+    # Create submission file
+    masks_to_submission(submissionFileName, filenames_list)
+
+    # create label images from submissionFile
+    for i in range(1, NR_TEST_IMAGES+1):
+        reconstruct_from_labels(i, submissionFileName)
 
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
 
 if __name__== "__main__":
         val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
-        print(val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist)
+        print("Validation loss = ", val_loss_hist)
+        print("Training loss = ", train_loss_hist)
+        print("Validation accuracy = ", val_acc_hist)
+        print("Training accuracy = ", train_acc_hist)
