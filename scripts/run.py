@@ -8,10 +8,8 @@ import sys
 from models import *
 from testing import *
 import torch.optim as optim
-from torch.autograd import Variable
 import torch.nn.functional as F
 from training import training
-import sklearn.metrics as metrics
 from constants import *
 
 

@@ -31,7 +31,6 @@ class UNET(nn.Module):
         self.output = self.output_block(128, out_channels)
 
 
-
     def doubleConv_block(self, in_channels, out_channels):
         """ (conv + ReLU + BN) * 2 times """
         doubleConv_block = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels, kernel_size = 3),

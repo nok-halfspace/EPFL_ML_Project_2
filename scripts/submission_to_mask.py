@@ -41,7 +41,6 @@ def reconstruct_from_labels(image_id, label_file):
             adata = np.zeros((w,h))
         else:
             adata = np.ones((w,h))
-        print(j,je,i,ie)
         im[j:je, i:ie] = binary_to_uint8(adata)
 
     Image.fromarray(im).save('prediction_' + '%.3d' % image_id + '.png')

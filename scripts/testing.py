@@ -5,7 +5,6 @@ from PIL import Image
 from training import *
 from mask_to_submission import *
 from submission_to_mask import *
-import matplotlib.pyplot as plt
 
 def test_and_save_predictions(network, test_imgs):
     print(test_imgs.shape)
@@ -18,15 +17,14 @@ def test_and_save_predictions(network, test_imgs):
 
         image = test_imgs[i]
         image = torch.unsqueeze(image, 0)
-        output = network(image)
-        output = output[0]
+        image = network(image)
+        image = image[0]
 
-        output = torch.argmax(softMax(output), 0)
-        output = output.numpy()
-        output = output[6:606, 6:606]
-        print(output.shape)
-        Image.fromarray(255*output.astype('uint8')).save(filename)
-
+        image = torch.argmax(softMax(image), 0)
+        image = image.numpy()
+        image = image[6:606, 6:606]
+        print(image.shape)
+        Image.fromarray(255*image.astype('uint8')).save(filename)
 
     return filenames_list
 
