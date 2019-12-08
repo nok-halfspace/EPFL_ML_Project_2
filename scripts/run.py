@@ -11,6 +11,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from training import training
 from constants import *
+from torchsummary import summary
 
 
 '''
@@ -36,7 +37,7 @@ def getPatches(image, patch_h, patch_w):
             patches.append(patch)
     return patches
 
-def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save = False):
+def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = False, save = False):
     train_data_filename = data_dir + path
     to_tensor = transforms.ToTensor() #ToTensor transforms the image to a tensor with range [0,1]
     num_images = TRAINING_SIZE
@@ -140,7 +141,12 @@ def main():
     print(labels_bin.type())
 
     epochs = NUM_EPOCHS
-    model, loss, optimizer = create_UNET()
+    #model, loss, optimizer = create_UNET()
+    model, loss, optimizer = create_smallerUNET()
+    
+    # getting a summary of the model 
+    summary(model, input_size=(3,400,400))
+    
     val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_bin, epochs, ratio=0.5)
     filenames_list = test_and_save_predictions(model, test_imgs)
 
