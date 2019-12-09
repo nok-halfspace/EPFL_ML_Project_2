@@ -134,7 +134,8 @@ def main():
 
 if __name__== "__main__":
         val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
-        print("Validation loss = ", val_loss_hist)
         print("Training loss = ", train_loss_hist)
-        print("Validation accuracy = ", val_acc_hist)
+        print("Testing loss = ", val_loss_hist)        
         print("Training accuracy = ", train_acc_hist)
+        print("Testing accuracy = ", val_acc_hist)
+
