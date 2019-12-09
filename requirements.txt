@@ -2,3 +2,5 @@ torch
 torchvision
 sklearn
 torchsummary
+psutil
+matplotlib
