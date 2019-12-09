@@ -141,7 +141,7 @@ def main():
 
     epochs = NUM_EPOCHS
     model, loss, optimizer = create_UNET()
-    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_bin, epochs, ratio=0.5)
+    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_bin, epochs, RATIO)
     filenames_list = test_and_save_predictions(model, test_imgs)
 
     submissionFileName = "latestSubmission.csv"
