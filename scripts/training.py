@@ -99,6 +99,10 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
         if DISPLAY:
             print(f'Epoch {epoch}, loss: {loss_value:.5f}, accuracy: {accuracy:.3f}, Val_loss: {val_loss:.5f}, Val_acc: {val_acc:.3f}')
 
+        print(">> Saving Model for Epoch ", str(epoch))
+        checkpoint = {'model_state': model.state_dict(), 'optimizer_state': optimizer.state_dict()}
+        torch.save(checkpoint, './model')
+
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
 

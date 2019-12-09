@@ -128,6 +128,7 @@ def main():
     for i in range(1, NR_TEST_IMAGES+1):
         reconstruct_from_labels(i, submissionFileName)
 
+    
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
 
