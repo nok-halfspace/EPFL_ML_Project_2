@@ -34,7 +34,7 @@ class UNET(nn.Module):
     def doubleConv_block(self, in_channels, out_channels):
         """ (conv + ReLU + BN) * 2 times """
         doubleConv_block = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels, kernel_size = 3),
-        torch.nn.ReLU(),  # apply activqtion function
+        torch.nn.ReLU(),  # apply activation function
         # Position of Batch Normalization (BN) wrt nonlinearity unclear, but experiments are generally in favor of this solution, which is the current default(ReLU + BN)
         torch.nn.BatchNorm2d(out_channels),
         torch.nn.Conv2d(out_channels, out_channels, kernel_size = 3),

@@ -9,19 +9,17 @@ from constants import *
 
 
 # Chosen score : F1 metrics to be in accordance with AIcrowd
-'''
-Fix F1 score, probably manually compute it
-'''
+
 def score(y_true,y_pred_onehot):
 
     softMax = torch.nn.Softmax(1)
     y_pred = torch.argmax(softMax(y_pred_onehot),1)
 
-    y_true_0 = y_true == 0
-    y_pred_0 = y_pred == 0
+    y_true_0 = y_true == False
+    y_pred_0 = y_pred == False
 
-    y_true_1 = y_true == 1
-    y_pred_1 = y_pred == 1
+    y_true_1 = y_true == True
+    y_pred_1 = y_pred == True
 
     true_negative_nb = len(y_true[y_true_0 & y_pred_0])
     false_negative_nb = len(y_true[y_true_1 & y_pred_0])
@@ -111,7 +109,7 @@ def plot_hist(val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist):
     ax1.set_ylabel('Loss')
     ax2.set_ylabel('accuracy')
 
-    ax1.plot(train_loss_hist,label='trainining')
+    ax1.plot(train_loss_hist,label='training')
     ax1.plot(val_loss_hist,label='validation')
     ax1.set_yscale('log')
     ax1.legend()

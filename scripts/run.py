@@ -13,19 +13,6 @@ from training import training
 from constants import *
 from torchsummary import summary
 
-# This function returns a list of patches from image (3D),
-# each patch has a size of patch_h * patch_w
-def getPatches(image, patch_h, patch_w):
-    patches = []
-    width = image.shape[1]
-    height = image.shape[2]
-    # print(width, height)
-    for i in range(0, height, patch_h):
-        for j in range(0, width, patch_w):
-            patch = image[:, j:j+patch_w, i:i+patch_h]
-            patches.append(patch)
-    return patches
-
 def readTrainingImages(TRAINING_SIZE, data_dir, path, rotate = False, save = False):
     train_data_filename = data_dir + path
     to_tensor = transforms.ToTensor() #ToTensor transforms the image to a tensor with range [0,1]
@@ -90,7 +77,7 @@ def readTestImages(test_directory, num_images):
     return imgs
 
     # Assign a one-hot label to each pixel of a ground_truth image
-    # can be improved usign scatter probably
+    # can be improved using scatter probably
     # or see how it is done in the tf_aerial.py
 def value_to_class(img):
     img = img.squeeze()
@@ -108,21 +95,14 @@ def value_to_class(img):
 
 
 def main():
-    data_dir = '../Datasets/training/'
-    test_dir = '../Datasets/test_set_images/test_'
-
-    train_data_filename = 'images/'
-    train_labels_filename = 'groundtruth/'
     
     # process = psutil.Process(os.getpid()) ## in case we need to verify memory usage
     # print(process.memory_info().rss/1024/1024)  # in Mbytes
 
-    print("Reading test images...")
-
+    # Reading test images
     test_imgs = readTestImages(test_dir, NR_TEST_IMAGES)
 
-    print("Reading training images...")
-
+    # Reading training images
     train_imgs, r_imgs = readTrainingImages(TRAINING_SIZE, data_dir, train_data_filename, rotateFlag) # satellite
     labels, r_labels = readTrainingImages(TRAINING_SIZE, data_dir, train_labels_filename, rotateFlag) # labels
 
@@ -130,22 +110,21 @@ def main():
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's output
     labels_bin =  torch.stack([value_to_class(labels[i]) for i in range(TRAINING_SIZE)]) # decimal to binary
 
+    # Creating the outline of the model we want
     # model, loss, optimizer = create_UNET() # 5 layers
     model, loss, optimizer = create_smallerUNET() # 4 layers
-    
-    # getting a summary of the model 
     summary(model, input_size=(3,400,400)) # prints memory resources
     
+    # training all (TRAINING_SIZE) images
     val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, train_imgs, labels_bin, NUM_EPOCHS, RATIO)
     
+    # predicting on thw the test images
     filenames_list = test_and_save_predictions(model, test_imgs)
 
-    submissionFileName = "latestSubmission.csv"
-
-    # Create submission file
+    # Create csv files
     masks_to_submission(submissionFileName, filenames_list)
 
-    # create label images from submissionFile
+    # create label images from csv
     for i in range(1, NR_TEST_IMAGES+1):
         reconstruct_from_labels(i, submissionFileName)
 
