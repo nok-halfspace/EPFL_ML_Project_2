@@ -61,9 +61,9 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
     train_loss_hist = []
 
     x,val_x,y, val_y = split_data(x, y, ratio)
+    process = psutil.Process(os.getpid())
 
     for epoch in range(epochs):
-        process = psutil.Process(os.getpid())
         print("Training, epoch=", epoch, "memory=",process.memory_info().rss/1024/1024)  # in bytes
         loss_value = 0.0
         correct = 0
@@ -71,7 +71,8 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             data_inputs = x[i:BATCH_SIZE+i]
             data_targets = y[i:BATCH_SIZE+i]
 
-            print("Training, epoch=", epoch, "memory=",process.memory_info().rss/1024/1024)  # in bytes
+            print("Image ", str(i), ": Memory usage =",process.memory_info().rss/1024/1024/1024)  # in GB
+
             #Traning step
             optimizer.zero_grad()
             outputs = model(data_inputs)

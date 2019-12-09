@@ -10,3 +10,5 @@ TRAINING_SIZE = 4 # Debug purposes
 NUM_EPOCHS = 1
 N_CLASSES = 2
 NR_TEST_IMAGES = 2 # 50
+rotateFlag = False
+RATIO=0.5
