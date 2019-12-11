@@ -118,10 +118,7 @@ class UNET(nn.Module):
 def create_UNET():
     network = UNET()
     network.to(DEVICE)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(network.parameters())
-    return network, criterion, optimizer
-
+    return network
 
 
 class smaller_UNET(nn.Module):
@@ -232,6 +229,4 @@ class smaller_UNET(nn.Module):
 def create_smallerUNET():
     network = smaller_UNET()
     network.to(DEVICE)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(network.parameters())
-    return network, criterion, optimizer
+    return network

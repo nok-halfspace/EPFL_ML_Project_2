@@ -112,13 +112,25 @@ def main():
 
     # Creating the outline of the model we want
     # model, loss, optimizer = create_UNET() # 5 layers
-    model, loss, optimizer = create_smallerUNET() # 4 layers
+
+    model = create_UNET() # 5 layer
+    loss = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters())
+
+    if (RELOAD_MODEL == True):
+        print("Reloading the model from the disk...")
+        checkpoint = torch.load(MODEL_PATH)
+        model.load_state_dict(checkpoint['model_state'])
+        optimizer.load_state_dict(checkpoint['optimizer_state'])
+
+    model.eval()
+
     summary(model, input_size=(3,400,400)) # prints memory resources
 
-    # training all (TRAINING_SIZE) images
+    # Training all (TRAINING_SIZE) images
     val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, train_imgs, labels_bin, NUM_EPOCHS, RATIO)
 
-    # predicting on thw the test images
+    # Predicting on thw the test images
     filenames_list = test_and_save_predictions(model, test_imgs)
 
     # Create csv files
@@ -128,8 +140,8 @@ def main():
     for i in range(1, NR_TEST_IMAGES+1):
         reconstruct_from_labels(i, submissionFileName)
 
-
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
+
 
 
 if __name__== "__main__":

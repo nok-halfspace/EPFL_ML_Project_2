@@ -26,8 +26,12 @@ def score(y_true,y_pred_onehot):
     true_positive_nb = len(y_true[y_true_1 & y_pred_1])
     false_positive_nb = len(y_true[y_true_0 & y_pred_1])
 
-    precision = true_positive_nb /(true_positive_nb + false_positive_nb)
-    recall = true_positive_nb / (true_positive_nb + false_negative_nb)
+    try:
+        precision = true_positive_nb / (true_positive_nb + false_positive_nb)
+        recall = true_positive_nb / (true_positive_nb + false_negative_nb)
+    except Exception as e:
+        precision = 0.5
+        recall = 0.5
 
     f1 = 2 * (precision * recall) / (precision + recall)
     return f1
@@ -60,6 +64,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
 
     x,val_x,y, val_y = split_data(x, y, ratio)
     process = psutil.Process(os.getpid())
+
 
     for epoch in range(epochs):
         print("Training, epoch =", epoch)
@@ -99,9 +104,10 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
         if DISPLAY:
             print(f'Epoch {epoch}, loss: {loss_value:.5f}, accuracy: {accuracy:.3f}, Val_loss: {val_loss:.5f}, Val_acc: {val_acc:.3f}')
 
-        print(">> Saving Model for Epoch ", str(epoch))
-        checkpoint = {'model_state': model.state_dict(), 'optimizer_state': optimizer.state_dict()}
-        torch.save(checkpoint, './model')
+        print(">> Saving Model for Epoch ", str(epoch), "at", MODEL_PATH)
+        checkpoint = {'model_state': model.state_dict(),
+                      'optimizer_state': optimizer.state_dict() }
+        torch.save(checkpoint, MODEL_PATH)
 
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
