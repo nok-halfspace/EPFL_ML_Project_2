@@ -18,5 +18,5 @@ data_dir = '../Datasets/training/'
 test_dir = '../Datasets/test_set_images/test_'
 train_data_filename = 'images/'
 train_labels_filename = 'groundtruth/'
-RELOAD_MODEL = True
+RELOAD_MODEL = False
 MODEL_PATH = "./model.pkg"
