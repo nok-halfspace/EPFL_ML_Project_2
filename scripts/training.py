@@ -62,8 +62,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
     process = psutil.Process(os.getpid())
 
     for epoch in range(epochs):
-        process = psutil.Process(os.getpid())
-        print("Training, epoch=", epoch)
+        print("Training, epoch =", epoch)
         print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
         loss_value = 0.0
         correct = 0
