@@ -22,7 +22,7 @@ def test_and_save_predictions(network, test_imgs):
 
         image = torch.argmax(softMax(image), 0)
         image = image.numpy()
-        image = image[6:606, 6:606]
+        image = image[2:610, 2:610]
         print(image.shape)
         Image.fromarray(255*image.astype('uint8')).save(filename)
 

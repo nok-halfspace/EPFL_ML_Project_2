@@ -11,32 +11,9 @@ import torch.optim as optim
 import torch.nn.functional as F
 from training import training
 from constants import *
+from torchsummary import summary
 
-
-'''
-Everyone: Refresh entire code, add comments !
-          Data Augmentation Procedures
-
-Clara: f1-score
-Natasha: converting to submission file
-Daniel: uploading to cloud to compute
-
-'''
-
-# This function returns a list of patches from image (3D),
-# each patch has a size of patch_h * patch_w
-def getPatches(image, patch_h, patch_w):
-    patches = []
-    width = image.shape[1]
-    height = image.shape[2]
-    # print(width, height)
-    for i in range(0, height, patch_h):
-        for j in range(0, width, patch_w):
-            patch = image[:, j:j+patch_w, i:i+patch_h]
-            patches.append(patch)
-    return patches
-
-def extract_feature_vectors(TRAINING_SIZE, data_dir, path, rotate = True, save = False):
+def readTrainingImages(TRAINING_SIZE, data_dir, path, rotate = False, save = False):
     train_data_filename = data_dir + path
     to_tensor = transforms.ToTensor() #ToTensor transforms the image to a tensor with range [0,1]
     num_images = TRAINING_SIZE
@@ -99,10 +76,8 @@ def readTestImages(test_directory, num_images):
     imgs = torch.stack(imgs)
     return imgs
 
-
-
     # Assign a one-hot label to each pixel of a ground_truth image
-    # can be improved usign scatter probably
+    # can be improved using scatter probably
     # or see how it is done in the tf_aerial.py
 def value_to_class(img):
     img = img.squeeze()
@@ -120,44 +95,46 @@ def value_to_class(img):
 
 
 def main():
-    data_dir = '../Datasets/training/'
-    test_dir = '../Datasets/test_set_images/test_'
 
-    train_data_filename = 'images/'
-    train_labels_filename = 'groundtruth/'
-    rotateFlag = False
-    # process = psutil.Process(os.getpid())
+    # process = psutil.Process(os.getpid()) ## in case we need to verify memory usage
     # print(process.memory_info().rss/1024/1024)  # in Mbytes
-    print("Reading test images...")
+
+    # Reading test images
     test_imgs = readTestImages(test_dir, NR_TEST_IMAGES)
 
-    imgs, r_imgs = extract_feature_vectors(TRAINING_SIZE, data_dir, train_data_filename, rotateFlag)
-    labels, r_labels = extract_feature_vectors(TRAINING_SIZE, data_dir, train_labels_filename, rotateFlag)
+    # Reading training images
+    train_imgs, r_imgs = readTrainingImages(TRAINING_SIZE, data_dir, train_data_filename, rotateFlag) # satellite
+    labels, r_labels = readTrainingImages(TRAINING_SIZE, data_dir, train_labels_filename, rotateFlag) # labels
 
-    labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's ouput
+    # Preprocessing
+    labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's output
+    labels_bin =  torch.stack([value_to_class(labels[i]) for i in range(TRAINING_SIZE)]) # decimal to binary
 
-    labels_bin =  torch.stack([value_to_class(labels[i]) for i in range(TRAINING_SIZE)])
-    print(labels_bin.type())
+    # Creating the outline of the model we want
+    # model, loss, optimizer = create_UNET() # 5 layers
+    model, loss, optimizer = create_smallerUNET() # 4 layers
+    summary(model, input_size=(3,400,400)) # prints memory resources
 
-    epochs = NUM_EPOCHS
-    model, loss, optimizer = create_UNET()
-    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, imgs, labels_bin, epochs, RATIO)
+    # training all (TRAINING_SIZE) images
+    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, train_imgs, labels_bin, NUM_EPOCHS, RATIO)
+
+    # predicting on thw the test images
     filenames_list = test_and_save_predictions(model, test_imgs)
 
-    submissionFileName = "latestSubmission.csv"
-    # Create submission file
+    # Create csv files
     masks_to_submission(submissionFileName, filenames_list)
 
-    # create label images from submissionFile
+    # create label images from csv
     for i in range(1, NR_TEST_IMAGES+1):
         reconstruct_from_labels(i, submissionFileName)
+
 
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
 
 if __name__== "__main__":
         val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
-        print("Validation loss = ", val_loss_hist)
         print("Training loss = ", train_loss_hist)
-        print("Validation accuracy = ", val_acc_hist)
+        print("Testing loss = ", val_loss_hist)
         print("Training accuracy = ", train_acc_hist)
+        print("Testing accuracy = ", val_acc_hist)
