@@ -62,15 +62,16 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
     process = psutil.Process(os.getpid())
 
     for epoch in range(epochs):
-        print("Training, epoch=", epoch, "memory=",process.memory_info().rss/1024/1024)  # in bytes
+        process = psutil.Process(os.getpid())
+        print("Training, epoch=", epoch)
+        print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
         loss_value = 0.0
         correct = 0
         for i in range(0,x.shape[0],BATCH_SIZE):
             data_inputs = x[i:BATCH_SIZE+i]
             data_targets = y[i:BATCH_SIZE+i]
-
-            print("Image ", str(i), ": Memory usage =",process.memory_info().rss/1024/1024/1024)  # in GB
-
+            print("Training image ", str(i))
+            print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
             #Traning step
             optimizer.zero_grad()
             outputs = model(data_inputs)

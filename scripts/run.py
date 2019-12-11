@@ -95,7 +95,7 @@ def value_to_class(img):
 
 
 def main():
-    
+
     # process = psutil.Process(os.getpid()) ## in case we need to verify memory usage
     # print(process.memory_info().rss/1024/1024)  # in Mbytes
 
@@ -114,10 +114,10 @@ def main():
     # model, loss, optimizer = create_UNET() # 5 layers
     model, loss, optimizer = create_smallerUNET() # 4 layers
     summary(model, input_size=(3,400,400)) # prints memory resources
-    
+
     # training all (TRAINING_SIZE) images
     val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, train_imgs, labels_bin, NUM_EPOCHS, RATIO)
-    
+
     # predicting on thw the test images
     filenames_list = test_and_save_predictions(model, test_imgs)
 
@@ -128,14 +128,13 @@ def main():
     for i in range(1, NR_TEST_IMAGES+1):
         reconstruct_from_labels(i, submissionFileName)
 
-    
+
     return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
 
 
 if __name__== "__main__":
         val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = main()
         print("Training loss = ", train_loss_hist)
-        print("Testing loss = ", val_loss_hist)        
+        print("Testing loss = ", val_loss_hist)
         print("Training accuracy = ", train_acc_hist)
         print("Testing accuracy = ", val_acc_hist)
-
