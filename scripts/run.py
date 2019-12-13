@@ -57,6 +57,7 @@ def readTrainingImages(TRAINING_SIZE, data_dir, path, rotate = False, save = Fal
 
     return imgs, r_imgs
 
+""" Reading test images """
 
 def readTestImages(test_directory, num_images):
     imgs = []
@@ -75,7 +76,6 @@ def readTestImages(test_directory, num_images):
 
     imgs = torch.stack(imgs)
     return imgs
-
     # Assign a one-hot label to each pixel of a ground_truth image
     # can be improved using scatter probably
     # or see how it is done in the tf_aerial.py
@@ -83,7 +83,7 @@ def value_to_class(img):
     img = img.squeeze()
     H = img.shape[0]
     W = img.shape[1]
-    labels = torch.randn((H,W))
+    labels = torch.randn((H,W)).to(DEVICE)
     foreground_threshold = 0.5
     for h in range(H) :
         for w in range(W) :
@@ -106,7 +106,7 @@ def main():
     train_imgs, r_imgs = readTrainingImages(TRAINING_SIZE, data_dir, train_data_filename, rotateFlag) # satellite
     labels, r_labels = readTrainingImages(TRAINING_SIZE, data_dir, train_labels_filename, rotateFlag) # labels
 
-    # Preprocessing
+#     # Preprocessing
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's output
     labels_bin =  torch.stack([value_to_class(labels[i]) for i in range(TRAINING_SIZE)]) # decimal to binary
 
