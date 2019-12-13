@@ -15,13 +15,13 @@ def test_and_save_predictions(network, test_imgs):
         filename = "../Datasets/Prediction/prediction_" + str(i+1) + ".png"
         filenames_list.append(filename)
 
-        image = test_imgs[i]
+        image = test_imgs[i].to(DEVICE)
         image = torch.unsqueeze(image, 0)
         image = network(image)
         image = image[0]
 
         image = torch.argmax(softMax(image), 0)
-        image = image.numpy()
+        image = image.cpu().numpy()
         image = image[2:610, 2:610]
         print(image.shape)
         Image.fromarray(255*image.astype('uint8')).save(filename)

@@ -7,11 +7,12 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #Whether to display the logs during training
 DISPLAY = False
 TRAINING_SIZE = 4 # Debug purposes
-NUM_EPOCHS = 1
+NUM_EPOCHS = 3
 N_CLASSES = 2
 NR_TEST_IMAGES = 2 # 50
 rotateFlag = False
 RATIO=0.5
+IMG_PATCH_SIZE = 16
 
 submissionFileName = "latestSubmission.csv"
 data_dir = '../Datasets/training/'
