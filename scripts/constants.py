@@ -3,13 +3,13 @@ import torch
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DISPLAY = False
-TRAINING_SIZE = 16 # Debug purposes
-NUM_EPOCHS = 2
-N_CLASSES = 2
+TRAINING_SIZE = 40 # Debug purposes
+NUM_EPOCHS = 3
 NR_TEST_IMAGES = 50
 rotateFlag = False
 RATIO = 0.75
 IMG_PATCH_SIZE = 16
+BATCH_SIZE = 1
 
 submissionFileName = "latestSubmission.csv"
 data_dir = '../Datasets/training/'
@@ -20,4 +20,3 @@ MODEL_PATH = "./model.pkg"
 
 RELOAD_MODEL = False
 DISPLAY = False
-BATCH_SIZE=1

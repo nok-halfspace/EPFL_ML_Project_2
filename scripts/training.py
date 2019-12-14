@@ -58,9 +58,6 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
         loss_value = 0.0
         correct = 0.0
         for i in range(0, x.shape[0], BATCH_SIZE):
-            print(type(x))
-
-
 
             data_inputs = x[i:BATCH_SIZE+i].to(DEVICE)
             data_targets = y[i:BATCH_SIZE+i].to(DEVICE)
@@ -77,11 +74,10 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             print("data_inputs[0].shape= ", data_inputs[0].shape)
             print(data_targets.shape)
 
-            data_input_numpy = data_inputs[0].numpy()
-            data_targets_numpy = data_targets.numpy()
-            # data_input_numpy_255 = (255 * data_input_numpy).astype('uint8')
+            data_input_numpy = data_inputs[0].cpu().numpy()
+            data_targets_numpy = data_targets.cpu().numpy()
 
-            # img = Image.fromarray(data_input_numpy.T, 'RGB')
+            # img = Image.fromarray(data_input_numpy.T, 'RGB') # if you want to check the initial image
             # img.save('out.png')
 
             print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
@@ -94,12 +90,12 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
                 print("Memory usage 1 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
                 data_input_numpy_rotated = ndimage.rotate(data_input_numpy, angle, reshape=False, axes=(1,2), mode='reflect')
                 data_input_rotated = torch.tensor(data_input_numpy_rotated)
-                data_input_rotated = torch.unsqueeze(data_input_rotated, 0)
+                data_input_rotated = torch.unsqueeze(data_input_rotated, 0).to(DEVICE)
                 data_target_numpy_rotated = ndimage.rotate(data_targets_numpy, angle, reshape=False, axes=(1,2), mode='reflect')
-                data_target_rotated = torch.tensor(data_target_numpy_rotated)
+                data_target_rotated = torch.tensor(data_target_numpy_rotated).to(DEVICE)
 
-                # img = Image.fromarray(rotated_image.T, 'RGB')
-                # img.save('out_45.png')
+                # img = Image.fromarray(rotated_image.T, 'RGB') # if you want to check the rotations
+                # img.save('out_rotated.png')
 
                 print("Memory usage 2 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
 
