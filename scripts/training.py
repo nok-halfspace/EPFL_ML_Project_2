@@ -67,7 +67,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
     train_acc_hist = []
     train_loss_hist = []
 
-    x,val_x,y, val_y = split_data(x, y, ratio)
+    x, val_x, y, val_y = split_data(x, y, ratio)
     process = psutil.Process(os.getpid())
 
     for epoch in range(epochs):
@@ -78,10 +78,12 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
         loss_value = 0.0
         correct = 0
         for i in range(0,x.shape[0],BATCH_SIZE):
+            print(type(x))
+
             data_inputs = x[i:BATCH_SIZE+i].to(DEVICE)
             data_targets = y[i:BATCH_SIZE+i].to(DEVICE)
-            
-            # HERE : Do data augmentation 
+
+            # HERE : Do data augmentation
 
             print("Training image ", str(i))
             print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
@@ -106,28 +108,15 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
         loss_val_value = 0.0
         correct_val = 0
         for i in range(0,val_x.shape[0],BATCH_SIZE):
-<<<<<<< HEAD
-                
             data_val_inputs = val_x[i:BATCH_SIZE+i].to(DEVICE)
             data_val_targets = val_y[i:BATCH_SIZE+i].to(DEVICE)
-            
+
             with torch.no_grad():
-        
+
                 outputs_val = model(data_val_inputs)
                 val_loss = loss_function(outputs_val,data_val_targets)
-            
-             # log 
-=======
-
-
-            data_val_inputs = val_x[i:BATCH_SIZE+i].to(DEVICE)
-            data_val_targets = val_y[i:BATCH_SIZE+i].to(DEVICE)
-
-            outputs_val = model(data_val_inputs)
-            val_loss = loss_function(outputs_val,data_val_targets)
 
              # log
->>>>>>> b52b01202a9f0398d4143ecc5e230498458a700e
             loss_val_value +=val_loss.item()
             correct_val += score(data_val_targets,outputs_val)
 
