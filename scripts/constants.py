@@ -20,4 +20,4 @@ MODEL_PATH = "./model.pkg"
 
 RELOAD_MODEL = False
 DISPLAY = False
-
+BATCH_SIZE=1

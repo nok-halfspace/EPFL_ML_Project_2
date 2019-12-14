@@ -23,7 +23,7 @@ def main():
     # Reading test images
     test_imgs = readTestImages(test_dir, NR_TEST_IMAGES)
 
-    ''' Reading training images ''' 
+    ''' Reading training images '''
     train_imgs, r_imgs = readTrainingImages(TRAINING_SIZE, data_dir, train_data_filename, rotateFlag) # groundtruth
     labels, r_labels = readTrainingImages(TRAINING_SIZE, data_dir, train_labels_filename, rotateFlag) # labels
 
@@ -68,3 +68,6 @@ def main():
     print("Testing loss = ", val_loss_hist)
     print("Training accuracy = ", train_acc_hist)
     print("Testing accuracy = ", val_acc_hist)
+
+
+main()
