@@ -13,31 +13,6 @@ import numpy as np
 
 # Chosen score : F1 metrics to be in accordance with AIcrowd
 
-# def score(y_true,y_pred_onehot):
-
-#     softMax = torch.nn.Softmax(1)
-#     y_pred = torch.argmax(softMax(y_pred_onehot),1)
-
-#     y_true_0 = y_true == False
-#     y_pred_0 = y_pred == False
-
-#     y_true_1 = y_true == True
-#     y_pred_1 = y_pred == True
-
-#     true_negative_nb = len(y_true[y_true_0 & y_pred_0])
-#     false_negative_nb = len(y_true[y_true_1 & y_pred_0])
-#     true_positive_nb = len(y_true[y_true_1 & y_pred_1])
-#     false_positive_nb = len(y_true[y_true_0 & y_pred_1])
-
-#     try:
-#         precision = true_positive_nb / (true_positive_nb + false_positive_nb)
-#         recall = true_positive_nb / (true_positive_nb + false_negative_nb)
-#     except Exception as e:
-#         precision = 0.5
-#         recall = 0.5
-#     f1 = 2 * (precision * recall) / (precision + recall + 0.01)
-#     return f1
-
 def score(y_true, y_pred_onehot):
     softMax = torch.nn.Softmax(1)
     y_pred_bin = torch.argmax(softMax(y_pred_onehot),1).view(-1)
@@ -48,7 +23,7 @@ def score(y_true, y_pred_onehot):
     return(f1)
 
 def split_data(x,y,ratio, seed = 1):
-    print(x.shape)
+
     """split the dataset based on the split ratio."""
     # set seed
     np.random.seed(seed)
@@ -76,14 +51,15 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
     process = psutil.Process(os.getpid())
 
     for epoch in range(epochs):
-        model.train()
 
-        print("Training, epoch=", epoch)
-        print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
+        ''' Training '''
+
+        model.train()
         loss_value = 0.0
         correct = 0.0
         for i in range(0, x.shape[0], BATCH_SIZE):
             print(type(x))
+
 
 
             data_inputs = x[i:BATCH_SIZE+i].to(DEVICE)
@@ -141,11 +117,10 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             #Log
             loss_value += total_loss.item()
 
-
         loss_value = loss_value/((1+n_rotions)*x.shape[0])
         accuracy = correct/((1+n_rotions)*x.shape[0])
 
-        #Validation prediction
+        ''' Validation '''
 
         model.eval()
         loss_val_value = 0.0
@@ -160,17 +135,15 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
 
                 actual_outputs_val = outputs_val[:,:,2:-2,2:-2]
                 val_loss = loss_function(actual_outputs_val,data_val_targets)
-
              # log
             loss_val_value +=val_loss.item()
+
             correct_val += score(data_val_targets,actual_outputs_val)
 
 
         loss_val_value /= val_x.shape[0]
         accuracy_val = correct_val/val_x.shape[0]
-        print(accuracy_val)
 
-        #Log
         val_loss_hist.append(loss_val_value)
         val_acc_hist.append(accuracy_val)
         train_loss_hist.append(loss_value)
