@@ -14,13 +14,11 @@ class UNET(nn.Module):
     def __init__(self, in_channels = 3, out_channels = 2):
         super(UNET,self).__init__()
         # Contracting path
-        self.contract1 = self.doubleConv_block(in_channels, 64)
+        self.contract1 = self.doubleConv_block(in_channels, 64, 0.25)
         self.contract2 = self.doubleConv_block(64, 128)
         self.contract3 = self.doubleConv_block(128, 256)
         self.contract4 = self.doubleConv_block(256, 512)
         
-        self.dropout_05 = torch.nn.modules.Dropout() # default value p = 0.5
-        self.dropout_025 = torch.nn.modules.Dropout(0.25)
         self.maxpool = torch.nn.MaxPool2d(kernel_size = 2)
 
         # Expansive path
@@ -33,7 +31,7 @@ class UNET(nn.Module):
         self.output = self.output_block(128, out_channels)
 
 
-    def doubleConv_block(self, in_channels, out_channels):
+    def doubleConv_block(self, in_channels, out_channels, p_dropout = 0.5):
         """ (conv + ReLU + BN) * 2 times """
         doubleConv_block = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels, kernel_size = 3),
         torch.nn.ReLU(),  # apply activation function
@@ -42,6 +40,7 @@ class UNET(nn.Module):
         torch.nn.Conv2d(out_channels, out_channels, kernel_size = 3),
         torch.nn.ReLU(),
         torch.nn.BatchNorm2d(out_channels),
+        torch.nn.modules.Dropout(p_dropout)
         )
 
         return doubleConv_block
@@ -88,20 +87,15 @@ class UNET(nn.Module):
 
         layer1_descending = self.contract1(layer0)
         print('layer1d', layer1_descending.shape)
-        layer1_descending = self.dropout_025(layer1_descending)
         
         layer2_descending = self.contract2(self.maxpool(layer1_descending))
         print('layer2d', layer2_descending.shape)
-        layer2_descending = self.dropout_05(layer2_descending)
         
         layer3_descending = self.contract3(self.maxpool(layer2_descending))
         print('layer3d', layer3_descending.shape)
-        layer3_descending = self.dropout_05(layer3_descending)
-
+        
         layer4_descending = self.contract4(self.maxpool(layer3_descending))
         print('layer4d', layer4_descending.shape)
-        layer4_descending = self.dropout_05(layer4_descending)
-
             
         layer5 = self.maxpool(layer4_descending)
         print('layer5', layer5.shape)
@@ -110,20 +104,16 @@ class UNET(nn.Module):
         # _ascending = input of the layer
         layer4_ascending = self.expand5(layer5)
         print('layer4a', layer4_ascending.shape)
-        layer4_ascending = self.dropout_05(layer4_ascending)
         
         
         layer3_ascending = self.expand4(self.concatenating_block(layer4_descending, layer4_ascending))
         print('layer3a', layer3_ascending.shape)
-        layer3_ascending = self.dropout_05(layer3_ascending)
         
         layer2_ascending = self.expand3(self.concatenating_block(layer3_descending, layer3_ascending))
         print('layer2a', layer2_ascending.shape)
-        layer2_ascending = self.dropout_05(layer2_ascending)
         
         layer1_ascending = self.expand2(self.concatenating_block(layer2_descending, layer2_ascending))
         print('layer1a', layer1_ascending.shape)
-        layer1_ascending = self.dropout_05(layer1_ascending)
 
         output = self.output(self.concatenating_block(layer1_descending, layer1_ascending))
         print('output', output.shape)
@@ -146,12 +136,14 @@ class smaller_UNET(nn.Module):
     def __init__(self, in_channels = 3, out_channels = 2):
         super(smaller_UNET,self).__init__()
         # Contracting path
-        self.contract1 = self.doubleConv_block(in_channels, 32)
+        self.contract1 = self.doubleConv_block(in_channels, 32, 0.25)
         self.contract2 = self.doubleConv_block(32, 64)
         self.contract3 = self.doubleConv_block(64, 128)
         self.contract4 = self.doubleConv_block(128, 256)
 
         self.maxpool = torch.nn.MaxPool2d(kernel_size = 2)
+        self.dropout_05 = torch.nn.modules.Dropout() # default value p = 0.5
+        self.dropout_025 = torch.nn.modules.Dropout(0.25)
 
         # Expansive path
         self.expand5 = self.expanding_block(256, 512)
@@ -163,15 +155,17 @@ class smaller_UNET(nn.Module):
         self.output = self.output_block(64, out_channels)
 
 
-    def doubleConv_block(self, in_channels, out_channels):
+    def doubleConv_block(self, in_channels, out_channels, p_dropout = 0.5):
         """ (conv + ReLU + BN) * 2 times """
         doubleConv_block = torch.nn.Sequential(torch.nn.Conv2d(in_channels, out_channels, kernel_size = 3),
-        torch.nn.ReLU(),  # apply activqtion function
+        torch.nn.ReLU(),  # apply activation function
         # Position of Batch Normalization (BN) wrt nonlinearity unclear, but experiments are generally in favor of this solution, which is the current default(ReLU + BN)
         torch.nn.BatchNorm2d(out_channels),
         torch.nn.Conv2d(out_channels, out_channels, kernel_size = 3),
         torch.nn.ReLU(),
-        torch.nn.BatchNorm2d(out_channels))
+        torch.nn.BatchNorm2d(out_channels),
+        torch.nn.modules.Dropout(p_dropout)
+        )
 
         return doubleConv_block
 

@@ -91,13 +91,15 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             #Traning step
             optimizer.zero_grad()
             outputs = model(data_inputs)
-            loss = loss_function(outputs, data_targets)
+            actual_outputs = outputs[:,:,2:-2,2:-2]
+            print(actual_outputs.shape)
+            loss = loss_function(actual_outputs, data_targets)
             loss.backward()
             optimizer.step()
 
             #Log
             loss_value += loss.item()
-            correct += score(data_targets,outputs)
+            correct += score(data_targets,actual_outputs)
 
         loss_value /= x.shape[0]
         accuracy = correct/x.shape[0]
@@ -114,15 +116,17 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             with torch.no_grad():
 
                 outputs_val = model(data_val_inputs)
-                val_loss = loss_function(outputs_val,data_val_targets)
+                actual_outputs_val = outputs_val[:,:,2:-2,2:-2]
+                val_loss = loss_function(actual_outputs_val,data_val_targets)
 
              # log
-            loss_val_value +=val_loss.item()
-            correct_val += score(data_val_targets,outputs_val)
+            loss_val_value +=val_loss.item()            
+            correct_val += score(data_val_targets,actual_outputs_val)
 
 
         loss_val_value /= val_x.shape[0]
         accuracy_val = correct_val/val_x.shape[0]
+        print(accuracy_val)
 
         #Log
         val_loss_hist.append(loss_val_value)

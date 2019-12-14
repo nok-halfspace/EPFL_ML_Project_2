@@ -79,20 +79,27 @@ def readTestImages(test_directory, num_images):
     # Assign a one-hot label to each pixel of a ground_truth image
     # can be improved using scatter probably
     # or see how it is done in the tf_aerial.py
-def value_to_class(img):
-    img = img.squeeze()
-    H = img.shape[0]
-    W = img.shape[1]
-    labels = torch.randn((H,W)).to(DEVICE)
-    foreground_threshold = 0.5
-    for h in range(H) :
-        for w in range(W) :
-            if img[h,w] > foreground_threshold:  # road
-                labels[h,w] = torch.tensor(1.0)
-            else:  # bgrd
-                labels[h,w] = torch.tensor(0.0)
-    return labels.long()
+def value_to_class_nat(img):
 
+    patch_size = 16
+
+    img = img.squeeze().numpy()
+    x_patch = int(img.shape[0]/patch_size)
+    y_patch = int(img.shape[1]/patch_size)
+    labels = torch.randn((x_patch*patch_size,y_patch*patch_size)).to(DEVICE)
+
+    foreground_threshold = 0.5
+    
+    for x in range(x_patch) :
+        for y in range(y_patch) :
+            val = img[x*patch_size:x*patch_size+patch_size, y*patch_size:y*patch_size+patch_size]
+            val = val.mean()
+            # print("[", x*patch_size, ":", x*patch_size+patch_size, "]" , "[", y*patch_size, ":", y*patch_size+patch_size, "] = ", val)
+            if val > foreground_threshold:  # road
+                labels[x*patch_size:x*patch_size+patch_size,y*patch_size:y*patch_size+patch_size] = torch.tensor(1.0)
+            else:  # bgrd
+                labels[x*patch_size:x*patch_size+patch_size,y*patch_size:y*patch_size+patch_size] = torch.tensor(0.0)
+    return labels.long()
 
 def main():
 
@@ -108,12 +115,12 @@ def main():
 
 #     # Preprocessing
     labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's output
-    labels_bin =  torch.stack([value_to_class(labels[i]) for i in range(TRAINING_SIZE)]) # decimal to binary
+    labels_bin =  torch.stack([value_to_class_nat(labels[i]) for i in range(TRAINING_SIZE)]) # decimal to binary
 
     # Creating the outline of the model we want
     # model, loss, optimizer = create_UNET() # 5 layers
 
-    model = create_UNET() # 5 layer
+    model = create_smallerUNET() # 5 layer
     loss = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
 
