@@ -98,13 +98,14 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
         loss_val_value = 0.0
         correct_val = 0
         for i in range(0,val_x.shape[0],BATCH_SIZE):
-           
-            
+                
             data_val_inputs = val_x[i:BATCH_SIZE+i].to(DEVICE)
             data_val_targets = val_y[i:BATCH_SIZE+i].to(DEVICE)
+            
+            with torch.no_grad():
         
-            outputs_val = model(data_val_inputs)
-            val_loss = loss_function(outputs_val,data_val_targets)
+                outputs_val = model(data_val_inputs)
+                val_loss = loss_function(outputs_val,data_val_targets)
             
              # log 
             loss_val_value +=val_loss.item()
