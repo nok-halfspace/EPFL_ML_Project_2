@@ -4,8 +4,11 @@ import numpy as np
 from sklearn.metrics import f1_score
 import os
 import psutil
-
+from scipy import ndimage
+from PIL import Image
+import scipy.misc
 from constants import *
+import numpy as np
 
 
 # Chosen score : F1 metrics to be in accordance with AIcrowd
@@ -38,7 +41,9 @@ from constants import *
 def score(y_true, y_pred_onehot):
     softMax = torch.nn.Softmax(1)
     y_pred_bin = torch.argmax(softMax(y_pred_onehot),1).view(-1)
+    print("y_true.shape v1= ", y_true.shape)
     y_true = y_true.view(-1)
+    print("y_true.shape v2= ", y_true.shape)
     f1 = f1_score(y_true.cpu(), y_pred_bin.cpu())
     return(f1)
 
@@ -76,31 +81,67 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
         print("Training, epoch=", epoch)
         print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
         loss_value = 0.0
-        correct = 0
-        for i in range(0,x.shape[0],BATCH_SIZE):
+        correct = 0.0
+        for i in range(0, x.shape[0], BATCH_SIZE):
             print(type(x))
+
 
             data_inputs = x[i:BATCH_SIZE+i].to(DEVICE)
             data_targets = y[i:BATCH_SIZE+i].to(DEVICE)
-
-            # HERE : Do data augmentation
-
-            print("Training image ", str(i))
-            print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
 
             #Traning step
             optimizer.zero_grad()
             outputs = model(data_inputs)
             loss = loss_function(outputs, data_targets)
-            loss.backward()
+
+            correct += score(data_targets, outputs)
+
+            # HERE : Do data augmentation
+            print("data_inputs[0].shape= ", data_inputs[0].shape)
+            print(data_targets.shape)
+
+            data_input_numpy = data_inputs[0].numpy()
+            data_targets_numpy = data_targets.numpy()
+            # data_input_numpy_255 = (255 * data_input_numpy).astype('uint8')
+
+            # img = Image.fromarray(data_input_numpy.T, 'RGB')
+            # img.save('out.png')
+
+            print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
+
+            loss_rotated = 0
+            n_rotions = 3
+            for tetha in range(1, n_rotions+1):
+                angle = 10 * tetha
+                print("Rotating image", i," with ", angle, "degrees.")
+                print("Memory usage 1 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
+                data_input_numpy_rotated = ndimage.rotate(data_input_numpy, angle, reshape=False, axes=(1,2), mode='reflect')
+                data_input_rotated = torch.tensor(data_input_numpy_rotated)
+                data_input_rotated = torch.unsqueeze(data_input_rotated, 0)
+                data_target_numpy_rotated = ndimage.rotate(data_targets_numpy, angle, reshape=False, axes=(1,2), mode='reflect')
+                data_target_rotated = torch.tensor(data_target_numpy_rotated)
+
+                # img = Image.fromarray(rotated_image.T, 'RGB')
+                # img.save('out_45.png')
+
+                print("Memory usage 2 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
+
+                print("Predict for rotated image", i, "with", angle, "degrees.")
+                outputs_rotated = model(data_input_rotated)
+                print("Memory usage 3 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
+                loss_rotated += loss_function(outputs_rotated, data_target_rotated)
+                correct += score(data_target_rotated, outputs_rotated)
+
+            total_loss = loss + loss_rotated
+            total_loss.backward()
             optimizer.step()
 
             #Log
-            loss_value += loss.item()
-            correct += score(data_targets,outputs)
+            loss_value += total_loss.item()
 
-        loss_value /= x.shape[0]
-        accuracy = correct/x.shape[0]
+
+        loss_value = loss_value/((1+n_rotions)*x.shape[0])
+        accuracy = correct/((1+n_rotions)*x.shape[0])
 
         #Validation prediction
 
@@ -114,7 +155,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             with torch.no_grad():
 
                 outputs_val = model(data_val_inputs)
-                val_loss = loss_function(outputs_val,data_val_targets)
+                val_loss = loss_function(outputs_val, data_val_targets)
 
              # log
             loss_val_value +=val_loss.item()
@@ -141,7 +182,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
 
 
 #Plot the logs of the loss and accuracy on the train/validation set
-def plot_hist(val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist):
+def plot_hist(val_loss_hist, train_loss_hist, val_acc_hist, train_acc_hist):
     fig, (ax1, ax2) = plt.subplots(1, 2,figsize=(15,5))
 
     ax1.set_ylabel('Loss')
