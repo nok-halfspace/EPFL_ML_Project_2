@@ -92,6 +92,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             #Traning step
             optimizer.zero_grad()
             outputs = model(data_inputs)
+            outputs = outputs[:,:,2:-2,2:-2]
             loss = loss_function(outputs, data_targets)
 
             correct += score(data_targets, outputs)
@@ -112,7 +113,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             loss_rotated = 0
             n_rotions = 3
             for tetha in range(1, n_rotions+1):
-                angle = 10 * tetha
+                angle = 20 * tetha
                 print("Rotating image", i," with ", angle, "degrees.")
                 print("Memory usage 1 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
                 data_input_numpy_rotated = ndimage.rotate(data_input_numpy, angle, reshape=False, axes=(1,2), mode='reflect')
@@ -129,6 +130,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
                 print("Predict for rotated image", i, "with", angle, "degrees.")
                 outputs_rotated = model(data_input_rotated)
                 print("Memory usage 3 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
+                outputs_rotated = outputs_rotated[:,:,2:-2,2:-2]
                 loss_rotated += loss_function(outputs_rotated, data_target_rotated)
                 correct += score(data_target_rotated, outputs_rotated)
 
@@ -155,6 +157,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             with torch.no_grad():
 
                 outputs_val = model(data_val_inputs)
+
                 actual_outputs_val = outputs_val[:,:,2:-2,2:-2]
                 val_loss = loss_function(actual_outputs_val,data_val_targets)
 

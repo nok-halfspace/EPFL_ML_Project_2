@@ -1,3 +1,5 @@
 **/.DS_STORE
 **/__pycache__/
-**/Datasets/training_debug/ 
+**/Datasets/training_debug/
+*.png 
+**/scripts/model
