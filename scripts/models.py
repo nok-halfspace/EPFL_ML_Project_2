@@ -83,40 +83,18 @@ class UNET(nn.Module):
          # Drop-out layers based on https://towardsdatascience.com/unet-line-by-line-explanation-9b191c76baf5
         pad = 94
         layer0 = F.pad(layer0, (pad, pad, pad, pad), mode = 'reflect')
-        print('layer0', layer0.shape)
-
         layer1_descending = self.contract1(layer0)
-        print('layer1d', layer1_descending.shape)
-        
         layer2_descending = self.contract2(self.maxpool(layer1_descending))
-        print('layer2d', layer2_descending.shape)
-        
         layer3_descending = self.contract3(self.maxpool(layer2_descending))
-        print('layer3d', layer3_descending.shape)
-        
         layer4_descending = self.contract4(self.maxpool(layer3_descending))
-        print('layer4d', layer4_descending.shape)
-            
         layer5 = self.maxpool(layer4_descending)
-        print('layer5', layer5.shape)
-
 
         # _ascending = input of the layer
         layer4_ascending = self.expand5(layer5)
-        print('layer4a', layer4_ascending.shape)
-        
-        
         layer3_ascending = self.expand4(self.concatenating_block(layer4_descending, layer4_ascending))
-        print('layer3a', layer3_ascending.shape)
-        
         layer2_ascending = self.expand3(self.concatenating_block(layer3_descending, layer3_ascending))
-        print('layer2a', layer2_ascending.shape)
-        
         layer1_ascending = self.expand2(self.concatenating_block(layer2_descending, layer2_ascending))
-        print('layer1a', layer1_ascending.shape)
-
         output = self.output(self.concatenating_block(layer1_descending, layer1_ascending))
-        print('output', output.shape)
 
         # Converting into vector
         #output = output.view(TRAINING_SIZE, N_CLASSES, -1)
@@ -170,7 +148,6 @@ class smaller_UNET(nn.Module):
         return doubleConv_block
 
 
-
     def expanding_block(self, in_channels, tmp_channels):
         """ (conv + ReLU + BN) * 2 times + upconv """
         out_channels = tmp_channels // 2
@@ -179,7 +156,6 @@ class smaller_UNET(nn.Module):
             torch.nn.ConvTranspose2d(tmp_channels, out_channels, kernel_size = 2, stride = 2)
         )
         return expanding_block
-
 
     def output_block(self, in_channels = 128, out_channels = 2):
         tmp_channels = in_channels // 2
@@ -206,32 +182,19 @@ class smaller_UNET(nn.Module):
         # Can't obtain a perfect padding to obtain a 200 * 200 image in the end : pad of 93 => final image 388 * 388 / pad of 94 => 404 * 404
         pad = 94
         layer0 = F.pad(layer0, (pad, pad, pad, pad), mode = 'reflect')
-        print('layer0', layer0.shape)
-
         layer1_descending = self.contract1(layer0)
-        print('layer1d', layer1_descending.shape)
         layer2_descending = self.contract2(self.maxpool(layer1_descending))
-        print('layer2d', layer2_descending.shape)
         layer3_descending = self.contract3(self.maxpool(layer2_descending))
-        print('layer3d', layer3_descending.shape)
         layer4_descending = self.contract4(self.maxpool(layer3_descending))
-        print('layer4d', layer4_descending.shape)
         layer5 = self.maxpool(layer4_descending)
-        print('layer5', layer5.shape)
 
 
         # _ascending = input of the layer
         layer4_ascending = self.expand5(layer5)
-        print('layer4a', layer4_ascending.shape)
         layer3_ascending = self.expand4(self.concatenating_block(layer4_descending, layer4_ascending))
-        print('layer3a', layer3_ascending.shape)
         layer2_ascending = self.expand3(self.concatenating_block(layer3_descending, layer3_ascending))
-        print('layer2a', layer2_ascending.shape)
         layer1_ascending = self.expand2(self.concatenating_block(layer2_descending, layer2_ascending))
-        print('layer1a', layer1_ascending.shape)
-
         output = self.output(self.concatenating_block(layer1_descending, layer1_ascending))
-        print('output', output.shape)
 
         # Converting into vector
         #output = output.view(TRAINING_SIZE, N_CLASSES, -1)
