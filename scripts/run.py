@@ -13,9 +13,14 @@ from constants import *
 from torchsummary import summary
 
 
-if __name__== "__main__":
-    
-    ''' Reading test images '''
+
+
+def main():
+
+    # process = psutil.Process(os.getpid()) ## in case we need to verify memory usage
+    # print(process.memory_info().rss/1024/1024)  # in Mbytes
+
+    # Reading test images
     test_imgs = readTestImages(test_dir, NR_TEST_IMAGES)
 
     ''' Reading training images ''' 
