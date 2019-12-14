@@ -16,9 +16,7 @@ import numpy as np
 def score(y_true, y_pred_onehot):
     softMax = torch.nn.Softmax(1)
     y_pred_bin = torch.argmax(softMax(y_pred_onehot),1).view(-1)
-    print("y_true.shape v1= ", y_true.shape)
     y_true = y_true.view(-1)
-    print("y_true.shape v2= ", y_true.shape)
     f1 = f1_score(y_true.cpu(), y_pred_bin.cpu())
     return(f1)
 
@@ -71,9 +69,6 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             correct += score(data_targets, outputs)
 
             # HERE : Do data augmentation
-            print("data_inputs[0].shape= ", data_inputs[0].shape)
-            print(data_targets.shape)
-
             data_input_numpy = data_inputs[0].cpu().numpy()
             data_targets_numpy = data_targets.cpu().numpy()
 
@@ -87,7 +82,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
             for tetha in range(1, n_rotions+1):
                 angle = 20 * tetha
                 print("Rotating image", i," with ", angle, "degrees.")
-                print("Memory usage 1 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
+                print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
                 data_input_numpy_rotated = ndimage.rotate(data_input_numpy, angle, reshape=False, axes=(1,2), mode='reflect')
                 data_input_rotated = torch.tensor(data_input_numpy_rotated)
                 data_input_rotated = torch.unsqueeze(data_input_rotated, 0).to(DEVICE)
@@ -97,11 +92,8 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
                 # img = Image.fromarray(rotated_image.T, 'RGB') # if you want to check the rotations
                 # img.save('out_rotated.png')
 
-                print("Memory usage 2 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
-
                 print("Predict for rotated image", i, "with", angle, "degrees.")
                 outputs_rotated = model(data_input_rotated)
-                print("Memory usage 3 {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
                 outputs_rotated = outputs_rotated[:,:,2:-2,2:-2]
                 loss_rotated += loss_function(outputs_rotated, data_target_rotated)
                 correct += score(data_target_rotated, outputs_rotated)

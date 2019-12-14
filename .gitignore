@@ -3,3 +3,4 @@
 **/Datasets/training_debug/
 *.png 
 **/scripts/model
+**/scripts/*.pyc
