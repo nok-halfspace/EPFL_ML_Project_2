@@ -32,9 +32,9 @@ from constants import *
 #     except Exception as e:
 #         precision = 0.5
 #         recall = 0.5
-
-#     f1 = 2 * (precision * recall) / (precision + recall)
+#     f1 = 2 * (precision * recall) / (precision + recall + 0.01)
 #     return f1
+
 def score(y_true, y_pred_onehot):
     softMax = torch.nn.Softmax(1)
     y_pred_bin = torch.argmax(softMax(y_pred_onehot),1).view(-1)
@@ -72,7 +72,7 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
 
     for epoch in range(epochs):
         model.train()
-        
+
         print("Training, epoch=", epoch)
         print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
         loss_value = 0.0
@@ -101,11 +101,12 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
         accuracy = correct/x.shape[0]
 
         #Validation prediction
-        
+
         model.eval()
         loss_val_value = 0.0
         correct_val = 0
         for i in range(0,val_x.shape[0],BATCH_SIZE):
+<<<<<<< HEAD
                 
             data_val_inputs = val_x[i:BATCH_SIZE+i].to(DEVICE)
             data_val_targets = val_y[i:BATCH_SIZE+i].to(DEVICE)
@@ -116,10 +117,21 @@ def training(model, loss_function, optimizer, x, y, epochs, ratio):
                 val_loss = loss_function(outputs_val,data_val_targets)
             
              # log 
+=======
+
+
+            data_val_inputs = val_x[i:BATCH_SIZE+i].to(DEVICE)
+            data_val_targets = val_y[i:BATCH_SIZE+i].to(DEVICE)
+
+            outputs_val = model(data_val_inputs)
+            val_loss = loss_function(outputs_val,data_val_targets)
+
+             # log
+>>>>>>> b52b01202a9f0398d4143ecc5e230498458a700e
             loss_val_value +=val_loss.item()
             correct_val += score(data_val_targets,outputs_val)
-        
-        
+
+
         loss_val_value /= val_x.shape[0]
         accuracy_val = correct_val/val_x.shape[0]
 
