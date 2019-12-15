@@ -5,6 +5,7 @@ Full aerial images dataset.
 import torch
 import numpy as np
 from torch.utils.data import Dataset
+from preprocessing import *
 
 def prepare_test_images(images_path, indices, aug_config, majority_voting=False):
     """
