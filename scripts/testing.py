@@ -5,6 +5,30 @@ from PIL import Image
 from training import *
 from mask_to_submission import *
 from submission_to_mask import *
+import numpy as np
+from torch.autograd import Variable
+
+def predict(model, loader, cuda, gpu_idx):
+    """
+    TODO: Change this
+    """
+    ouputPredicted = []
+    model.eval()
+
+    for data in loader:
+        patches = data
+        if cuda: patches = patches.cuda(gpu_idx)
+        patches = Variable(patches)                  # TODO: get rid of this depricated thing
+
+        with torch.no_grad():                        # TODO: added by us
+
+            # Feed model with patches
+            outputs = model(patches)
+            predicted = np.rint(outputs.squeeze().data.cpu().numpy())
+            predicted_labels.append(predicted)
+
+    return ouputPredicted
+
 
 def test_and_save_predictions(network, test_imgs):
     print(test_imgs.shape)

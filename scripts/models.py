@@ -13,12 +13,13 @@ import torch.optim as optim
 class UNET(nn.Module):
     def __init__(self, in_channels = 3, out_channels = 2):
         super(UNET,self).__init__()
+
         # Contracting path
         self.contract1 = self.doubleConv_block(in_channels, 64, 0.25)
         self.contract2 = self.doubleConv_block(64, 128)
         self.contract3 = self.doubleConv_block(128, 256)
         self.contract4 = self.doubleConv_block(256, 512)
-        
+
         self.maxpool = torch.nn.MaxPool2d(kernel_size = 2)
 
         # Expansive path
