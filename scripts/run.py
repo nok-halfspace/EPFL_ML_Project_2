@@ -38,7 +38,7 @@ def main():
     # quit()
 
     ''' Creating the Model '''
-    model = create_UNET() # 5 layer
+    model = create_smallerUNET() # 4 layer
     loss = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
 
