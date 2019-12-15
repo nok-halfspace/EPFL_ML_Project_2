@@ -120,7 +120,6 @@ def training(num_epochs, model, criterion, optimizer, lr_scheduler, datasets, da
 
     return scores, train_loss, val_loss, best_model_wts
 
-#
 # def training(model, loss_function, optimizer, x, y, epochs, ratio):
 #     val_loss_hist = []
 #     val_acc_hist = []
