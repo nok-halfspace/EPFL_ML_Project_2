@@ -133,17 +133,20 @@ def augment_channels(images, aug_config):
 """
 Images loading helpers.
 """
-def extract_images(filepath, indices):
+def extract_images(filepath, indices, imgName):
     """
     Load images with given indices from the filepath.
     Note that the classical file name convention of the project is used.
     """
     imgs = []
-    print ('Loading {} aerial images...'.format(len(indices)), end='')
+    print ('Loading ', len(indices),' test images...')
 
     # Load all images
     for i in indices:
-        filename = filepath + 'satImage_{:03d}.png'.format(i)
+        if imgName == 'test_':
+            filename = filepath + imgName + '{}.png'.format(i)
+        else:
+            filename = filepath +  imgName + '{:03d}.png'.format(i)
         if os.path.isfile(filename):
             img = mpimg.imread(filename)
             imgs.append(img)
@@ -237,8 +240,8 @@ def prepare_train_patches(images_path, labels_path, indices, patch_size, overlap
     """
 
     # Load images and labels
-    images = extract_images(images_path, indices)
-    labels = extract_images(labels_path, indices)
+    images = extract_images(images_path, indices, "satImage_")
+    labels = extract_images(labels_path, indices, "satImage_")
 
     # Get patches
     if overlap:

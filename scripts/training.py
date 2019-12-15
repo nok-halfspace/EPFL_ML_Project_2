@@ -109,7 +109,7 @@ def training(num_epochs, model, criterion, optimizer, lr_scheduler, datasets, da
         else:
             progress_str = '[epoch {}/{}]'.format(epoch + 1, num_epochs)
 
-        print(progress_str)
+        # print(progress_str)
 
         # Adjust learning rate
         lr_scheduler.step(int(np.mean(epoch_loss_train) * 1000))

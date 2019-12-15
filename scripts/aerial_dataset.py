@@ -14,7 +14,7 @@ def prepare_test_images(images_path, indices, aug_config, majority_voting=False)
     """
     # Load images
     #NOTE: needed np.arrays to append that stuff easily
-    images = np.array(extract_images(images_path, indices))
+    images = np.array(extract_images(images_path, indices, "test_"))
 
     if majority_voting:
         #This has been chosen so that the structure of images is

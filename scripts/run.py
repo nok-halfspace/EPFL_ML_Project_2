@@ -67,7 +67,7 @@ def main():
     testloader = DataLoader(testset, batch_size=1, shuffle=False)
 
     # Predict labels
-    predicted_labels = predict(model, testloader, cuda, gpu_idx) # TODO: Change this
+    predicted_labels = predict(network, testloader) # TODO: Change this
 
     # Transform pixel-wise prediction to patchwise
     patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, TEST_PATCH_SIZE, 0.25) for labels in predicted_labels]  # TODO: Change this
