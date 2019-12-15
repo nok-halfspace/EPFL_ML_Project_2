@@ -7,114 +7,95 @@ import torch.optim as optim
 
 
 # -------------------------------------------
-# U-NET 3rd version
-# Architecture based on the initial paper
+# U-NET
+# Our architecture
 # -------------------------------------------
-class UNET3rd(nn.Module):
-    """
-    TODO
-    """
+class UNET(nn.Module):
     def __init__(self):
-        super(UNET3rd, self).__init__()
+        super(UNET,self).__init__()
+        
+        # Maxpooling
+        self.maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+        # Dropout
+        self.dropout = nn.modules.Dropout(0.20)
+        
+        # Contracting path : Context
+        self.contract1 = self.doubleConv_block(3, 16, 16)
+        self.contract2 = self.doubleConv_block(16, 32, 32)
+        self.contract3 = self.doubleConv_block(32, 64, 64)
+        
+        # Center of the network
+        self.center = self.expanding_block(64, 128, 64)
 
-        self.down1 = ContractStep(3, 16)
-        self.down2 = ContractStep(16, 32)
+       # Expanding path : Localization       
+        self.expand3 = self.expanding_block(128, 64, 32)
+        self.expand2 = self.expanding_block(64, 32, 16)
+        self.expand1 = self.output_block(32, 16)
 
-        self.down3 = ContractStep(32, 64, p = DROPOUT)
-        self.center = ExpandStep(64, 128, 64)
-        self.up3 = ExpandStep(128, 64, 32)
-        self.up2 = ExpandStep(64, 32, 16)
-        self.up1 = LastStep(32, 16, 3) # get the result
-
+        # Getting the prediction
         self.Sigmoid = nn.Sigmoid()
+        
+    def doubleConv_block(self, in_channels, tmp_channels, out_channels):
+        """ (BN + conv + ReLU) * 2 times """
+        doubleConv_block = nn.Sequential(nn.BatchNorm2d(in_channels),
+        nn.Conv2d(in_channels, tmp_channels, kernel_size =3, padding = 1),
+        nn.ReLU(),  
+        nn.BatchNorm2d(tmp_channels),
+        nn.Conv2d(tmp_channels, out_channels, kernel_size = 2, stride = 2),
+        nn.ReLU()                                
+        )
 
-    def forward(self, x):
-        down1, bridge1 = self.down1(x)
-        down2, bridge2 = self.down2(down1)
-        down3, bridge3 = self.down3(down2)
-        center = self.center(down3)
-        up3 = self.up3(torch.cat([center, bridge3], 1))
-        up2 = self.up2(torch.cat([up3, bridge2], 1))
+        return doubleConv_block                
+        
+    def concatenating_block(self, x_contracting, x_expanding):
+        return torch.cat([x_expanding, x_contracting], dim = 1)
+    
+    def expanding_block(self, in_channels, tmp_channels, out_channels):
+        """ (BN + conv + ReLU) * 2 times + upconv """
+        expanding_block = nn.Sequential(
+                 self.doubleConv_block(in_channels, tmp_channels, tmp_channels),
+                 nn.ConvTranspose2d(tmp_channels, out_channels, kernel_size = 2, stride = 2)
+        )
+        return expanding_block    
+    
+   
+    
+    def output_block(self, in_channels, tmp_channels):
+        output_block = nn.Sequential(
+                self.doubleConv_block(in_channels, tmp_channels, tmp_channels),
+                nn.Conv2d(tmp_channels, 1, kernel_size=1)
+        )
+        return output_block
+            
+    
+    def forward(self, layer0):
+        print('layer0', layer0.shape)
+        layer1_descending = self.contract1(layer0)
+        print('layer1', layer1_descending.shape)
+        layer2_descending = self.contract2(self.maxpool(layer1_descending))
+        print('layer2', layer2_descending.shape)
+        layer3_descending = self.contract3(self.maxpool(layer2_descending))
+        print('layer3', layer3_descending.shape)
+        layer3_descending = self.dropout(layer3_descending)
+        print('layer3 drop', layer3_descending.shape)
+        layer_center = self.center(self.maxpool(layer3_descending))
+        print('center', layer_center.shape)
 
-        up1 = self.up1(torch.cat([up2, bridge1], 1))
+        layer3_ascending = self.expand3(self.concatenating_block(layer3_descending, layer_center))
+        print('layer3', layer3_ascending.shape)
+        layer2_ascending = self.expand2(self.concatenating_block(layer2_descending, layer3_ascending))
+        print('layer2', layer2_ascending.shape)
+        layer1_ascending = self.expand1(self.concatenating_block(layer1_descending, layer2_ascending))
+        print('layer1', layer1_ascending.shape)
+        
+        output = self.Sigmoid(layer1_ascending)
+        print('output', output.shape)
 
-        return self.Sigmoid(up1)
-
-class ContractStep(nn.Module):
-    """
-    TODO
-    """
-    def __init__(self, in_channels, out_channels, p = 0):
-        super(ContractStep, self).__init__()
-
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
-        self.relu = nn.ReLU()
-        self.batchnorm1 = nn.BatchNorm2d(in_channels)
-        self.batchnorm2 = nn.BatchNorm2d(out_channels)
-        self.maxpooling = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.dropout = nn.Dropout(p)
-
-    def forward(self, x):
-        x = self.batchnorm1(x)
-        x = self.relu(self.conv1(x))
-        x = self.batchnorm2(x)
-        x = self.relu(self.conv2(x))
-        to_concat = x.clone()
-        x = self.dropout(x) # Check original
-
-        return self.maxpooling(x), to_concat
-
-class ExpandStep(nn.Module):
-    """
-    TODO
-    """
-    def __init__(self, in_channels, middle_channels, out_channels):
-        super(ExpandStep, self).__init__()
-
-        self.conv1 = nn.Conv2d(in_channels, middle_channels, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(middle_channels, middle_channels, kernel_size=3, padding=1)
-        self.relu = nn.ReLU()
-        self.batchnorm1 = nn.BatchNorm2d(in_channels)
-        self.batchnorm2 = nn.BatchNorm2d(middle_channels)
-        self.upconv = nn.ConvTranspose2d(middle_channels, out_channels, kernel_size=2, stride=2)
-
-    def forward(self, x):
-        x = self.batchnorm1(x)
-        x = self.relu(self.conv1(x))
-
-        x = self.batchnorm2(x)
-        x = self.relu(self.conv2(x))
-
-        return self.upconv(x)
-
-class LastStep(nn.Module):
-    """
-    Define a single UNet up step, using convolutions and maxpooling.
-    """
-    def __init__(self, in_channels, middle_channels, out_channels):
-        super(LastStep, self).__init__()
-
-        self.conv1 = nn.Conv2d(in_channels, middle_channels, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(middle_channels, middle_channels, kernel_size=3, padding=1)
-        self.relu = nn.ReLU()
-        self.batchnorm1 = nn.BatchNorm2d(in_channels)
-        self.batchnorm2 = nn.BatchNorm2d(middle_channels)
-
-        self.final = nn.Conv2d(middle_channels, NUM_CLASSES, kernel_size=1)
-
-    def forward(self, x):
-        x = self.batchnorm1(x)
-        x = self.relu(self.conv1(x))
-        x = self.batchnorm2(x)
-        x = self.relu(self.conv2(x))
-        return self.final(x)
+        return output
 
 
-
-def create_UNET3rd():
-    network = UNET3rd().to(DEVICE)
+def create_UNET():
+    network = UNET().to(DEVICE)
     criterion = nn.BCEWithLogitsLoss().to(DEVICE)
     optimizer = optim.Adam(network.parameters())
     return network, criterion, optimizer
