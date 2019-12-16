@@ -22,16 +22,13 @@ from mask_to_submission import *
 
 def main():
 
-    # process = psutil.Process(os.getpid()) ## in case we need to verify memory usage
-    # print(process.memory_info().rss/1024/1024)  # in Mbytes
-
     # Get augmentation configuration
-    aug_config = ImageAugmentationConfig()
-    aug_config.rotation([45, 90, 135, 180, 225, 270, 315])
+    rotation = True
+    rotation_angles = [45, 90, 135, 180, 225, 270, 315]
 
     # Create dataset and dataloader
     indices = np.arange(1, TRAINING_SIZE + 1)  # TODO change this
-    trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_LABEL_PATH, indices, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, aug_config)  # TODO change this
+    trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_LABEL_PATH, indices, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, rotation, rotation_angles)  # TODO change this
     trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
 
     ''' Creating the Model '''
@@ -67,10 +64,10 @@ def main():
     testloader = DataLoader(testset, batch_size=1, shuffle=False)
 
     # Predict labels
-    predicted_labels = predict(network, testloader) # TODO: Change this
+    roadsPredicted = predict(network, testloader) # TODO: Change this
 
     # Transform pixel-wise prediction to patchwise
-    patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, TEST_PATCH_SIZE, 0.25) for labels in predicted_labels]  # TODO: Change this
+    patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, TEST_PATCH_SIZE, 0.25) for labels in roadsPredicted]  # TODO: Change this
 
     # Extract each patch
     img_patches_submit = extract_patches(patched_images, TEST_PATCH_SIZE)

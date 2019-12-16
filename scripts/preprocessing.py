@@ -8,127 +8,6 @@ from skimage import img_as_ubyte, img_as_float
 from skimage.util import view_as_windows
 import os
 import matplotlib.image as mpimg
-"""
-Image augmentation configuration wrapper.
-"""
-class ImageAugmentationConfig:
-    """
-    Encapsulate an augmentation configuration.
-    Example:
-
-        config = ImageAugmentationConfig()
-        config.rotation([20, 80])
-        config.flip()
-        config.edge()
-        config.blur()
-        config.contrast()
-    """
-    def __init__(self):
-        self.do_rotation = False
-        self.do_flip = False
-        self.augment_channels = False
-        self.do_edge = False
-        self.do_blur = False
-        self.do_contrast = False
-        self.do_convolve = False
-        self.do_invert = False
-
-    def rotation(self, angles):
-        """
-        Add rotations.
-        """
-        self.do_rotation = True
-        self.rotation_angles = angles
-
-    def flip(self):
-        """
-        Add flip transformation.
-        """
-        self.do_flip = True
-
-    def edge(self):
-        """
-        Add edge augmentation.
-        """
-        self.augment_channels = True
-        self.do_edge = True
-
-    def contrast(self):
-        """
-        Add contrast augmentation.
-        """
-        self.augment_channels = True
-        self.do_contrast = True
-
-    def convolve(self):
-        """
-        Add convolution augmentation.
-        """
-        self.augment_channels = True
-        self.do_convolve = True
-
-    def invert(self):
-        """
-        Add invertion augmentation.
-        """
-        self.augment_channels = True
-        self.do_invert = True
-
-    def blur(self, sigma=2):
-        """
-        Add blur augmentation.
-        """
-        self.augment_channels = True
-        self.do_blur = True
-        self.blur_sigma = sigma
-
-
-
-def augment_channels(images, aug_config):
-    """
-    Augment each image in images with the channel transformation given in aug_config.
-    """
-    augmented_images = []
-
-    # Instantiate transformations
-    if aug_config.do_blur:
-        blur = iaa.GaussianBlur(sigma=aug_config.blur_sigma)
-    if aug_config.do_edge:
-        edge = iaa.EdgeDetect(alpha=1)
-    if aug_config.do_contrast:
-        contrast = iaa.ContrastNormalization((0.5, 1.5))
-    if aug_config.do_convolve:
-        convolve = iaa.Convolve(matrix=np.array([[0, -1, 0],[-1, 4, -1],[0, -1, 0]]))
-    if aug_config.do_invert:
-        invert = iaa.Invert(1)
-
-    # Augment each image
-    for im in images:
-        augmented = im
-        if aug_config.do_blur:
-            aug = img_as_float(blur.augment_image(img_as_ubyte(im)))
-            augmented = np.dstack((augmented, aug))
-
-        if aug_config.do_edge:
-            aug = img_as_float(edge.augment_image(img_as_ubyte(im)))
-            augmented = np.dstack((augmented, aug))
-
-        if aug_config.do_contrast:
-            aug = img_as_float(contrast.augment_image(img_as_ubyte(im)))
-            augmented = np.dstack((augmented, aug))
-
-        if aug_config.do_convolve:
-            aug = img_as_float(convolve.augment_image(img_as_ubyte(im)))
-            augmented = np.dstack((augmented, aug))
-
-        if aug_config.do_invert:
-            aug = img_as_float(invert.augment_image(img_as_ubyte(im)))
-            augmented = np.dstack((augmented, aug))
-
-        augmented_images.append(augmented)
-
-    return augmented_images
-
 
 """
 Images loading helpers.
@@ -234,7 +113,7 @@ def mirror(im, length):
 """
 Main functions responsible for loading and transforming images.
 """
-def prepare_train_patches(images_path, labels_path, indices, patch_size, overlap, overlap_amount, aug_config):
+def prepare_train_patches(images_path, labels_path, indices, patch_size, overlap, overlap_amount, rotation, rotation_angles):
     """
     Load, patchify and augment images and labels for training.
     """
@@ -251,38 +130,17 @@ def prepare_train_patches(images_path, labels_path, indices, patch_size, overlap
         image_patches = [patch for im in images for patch in patchify(im, patch_size)]
         label_patches = [patch for label in labels for patch in patchify(label, patch_size)]
 
-    if not aug_config:
-        return image_patches, label_patches
-
     patches = zip(image_patches, label_patches)
 
     # Rotation needs to be applied on whole image
-    if aug_config.do_rotation:
-        images_rot = rotate_images(images, aug_config.rotation_angles)
-        labels_rot = rotate_images(labels, aug_config.rotation_angles)
+    if rotation:
+        images_rot = rotate_images(images, rotation_angles)
+        labels_rot = rotate_images(labels, rotation_angles)
 
         for im, label in zip(images_rot, labels_rot):
             p = patchify_no_corner(im, label, patch_size, overlap, overlap_amount)
             image_patches.extend(p[0])
             label_patches.extend(p[1])
-
-    # Flip each patch horizontally
-    images_flipped = []
-    labels_flipped = []
-    if aug_config.do_flip:
-        flip_hor = iaa.Fliplr(0.5).to_deterministic()
-        flip_ver = iaa.Flipud(0.5).to_deterministic()
-        images_flipped.extend(flip_hor.augment_images(image_patches))
-        images_flipped.extend(flip_ver.augment_images(image_patches))
-        labels_flipped.extend(flip_hor.augment_images(label_patches))
-        labels_flipped.extend(flip_ver.augment_images(label_patches))
-
-    image_patches.extend([im.copy() for im in images_flipped])
-    label_patches.extend([im.copy() for im in labels_flipped])
-
-    # For all the patches (even new ones), augment channels
-    if aug_config.augment_channels:
-        image_patches = augment_channels(image_patches, aug_config)
 
     return image_patches, label_patches
 

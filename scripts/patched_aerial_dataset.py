@@ -5,7 +5,7 @@ from torchvision.transforms import Compose
 from skimage import img_as_ubyte
 from preprocessing import *
 
-LABELING_THRESHOLD = 128
+MAX_VALUE = 256
 
 class Relabel:
     """
@@ -13,8 +13,8 @@ class Relabel:
     """
     def __call__(self, tensor):
         assert isinstance(tensor, torch.FloatTensor), 'tensor needs to be FloatTensor'
-        tensor[tensor < LABELING_THRESHOLD] = 0
-        tensor[tensor >= LABELING_THRESHOLD] = 1
+        tensor[tensor < MAX_VALUE / 2] = 0
+        tensor[tensor >= MAX_VALUE / 2] = 1
         return tensor
 
 
@@ -30,9 +30,9 @@ class PatchedAerialDataset(Dataset):
     """
     Data set of pacthed arial images for a given path, indices, patch size, overlap and image augmentation.
     """
-    def __init__(self, images_path, labels_path, indices, patch_size, overlap, overlap_amount, augmentation_config):
+    def __init__(self, images_path, labels_path, indices, patch_size, overlap, overlap_amount, rotation, rotation_angles):
         # Load images and labels
-        images, labels = prepare_train_patches(images_path, labels_path, indices, patch_size, overlap, overlap_amount, augmentation_config)
+        images, labels = prepare_train_patches(images_path, labels_path, indices, patch_size, overlap, overlap_amount, rotation, rotation_angles)
         self.patched_images = images
         self.patched_labels = labels
 
