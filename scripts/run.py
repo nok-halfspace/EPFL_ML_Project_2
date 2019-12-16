@@ -35,7 +35,7 @@ def main():
     trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
 
     ''' Creating the Model '''
-    network, criterion, optimizer = create_UNET3rd() # 3 layer
+    network, criterion, optimizer = create_UNET() # 3 layer
 
     ''' Reloading an old model if user defines so '''
     if (RELOAD_MODEL == True):
