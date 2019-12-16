@@ -41,7 +41,7 @@ class UNET(nn.Module):
         nn.Conv2d(in_channels, tmp_channels, kernel_size =3, padding = 1),
         nn.ReLU(),  
         nn.BatchNorm2d(tmp_channels),
-        nn.Conv2d(tmp_channels, out_channels, kernel_size = 2, stride = 2),
+        nn.Conv2d(tmp_channels, out_channels, kernel_size = 3, padding = 1),
         nn.ReLU()                                
         )
 
@@ -69,27 +69,17 @@ class UNET(nn.Module):
             
     
     def forward(self, layer0):
-        print('layer0', layer0.shape)
         layer1_descending = self.contract1(layer0)
-        print('layer1', layer1_descending.shape)
         layer2_descending = self.contract2(self.maxpool(layer1_descending))
-        print('layer2', layer2_descending.shape)
         layer3_descending = self.contract3(self.maxpool(layer2_descending))
-        print('layer3', layer3_descending.shape)
         layer3_descending = self.dropout(layer3_descending)
-        print('layer3 drop', layer3_descending.shape)
         layer_center = self.center(self.maxpool(layer3_descending))
-        print('center', layer_center.shape)
 
         layer3_ascending = self.expand3(self.concatenating_block(layer3_descending, layer_center))
-        print('layer3', layer3_ascending.shape)
         layer2_ascending = self.expand2(self.concatenating_block(layer2_descending, layer3_ascending))
-        print('layer2', layer2_ascending.shape)
         layer1_ascending = self.expand1(self.concatenating_block(layer1_descending, layer2_ascending))
-        print('layer1', layer1_ascending.shape)
         
         output = self.Sigmoid(layer1_ascending)
-        print('output', output.shape)
 
         return output
 
