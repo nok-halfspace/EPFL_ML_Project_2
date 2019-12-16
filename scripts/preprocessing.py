@@ -1,7 +1,3 @@
-
-"""
-Channel augmentation main function.
-"""
 import numpy as np
 from imgaug import augmenters as iaa
 from skimage import img_as_ubyte, img_as_float
@@ -9,31 +5,20 @@ from skimage.util import view_as_windows
 import os
 import matplotlib.image as mpimg
 
-"""
-Images loading helpers.
-"""
-def extract_images(filepath, indices, imgName):
-    """
-    Load images with given indices from the filepath.
-    Note that the classical file name convention of the project is used.
-    """
-    imgs = []
-    print ('Loading ', len(indices),' test images...')
-
-    # Load all images
-    for i in indices:
+def read_images(pathFile, training_size, imgName):
+    print ('Reading', training_size, 'images...')
+    images = []
+    for i in range(1, training_size + 1):
         if imgName == 'test_':
-            filename = filepath + imgName + '{}.png'.format(i)
+            imgPath = pathFile + imgName + '{}.png'.format(i)
         else:
-            filename = filepath +  imgName + '{:03d}.png'.format(i)
-        if os.path.isfile(filename):
-            img = mpimg.imread(filename)
-            imgs.append(img)
+            imgPath = pathFile +  imgName + '{:03d}.png'.format(i)
+        if os.path.isfile(imgPath):
+            image = mpimg.imread(imgPath)
+            images.append(image)
         else:
-            print('File {} does not exists'.format(filename))
-
-    print('done')
-    return np.asarray(imgs)
+            print('Image', imgPath, 'can not be found. Check the path.')
+    return np.asarray(images)
 
 
 """
@@ -109,18 +94,9 @@ def mirror(im, length):
     return mirrored
 
 
-
-"""
-Main functions responsible for loading and transforming images.
-"""
-def prepare_train_patches(images_path, labels_path, indices, patch_size, overlap, overlap_amount, rotation, rotation_angles):
-    """
-    Load, patchify and augment images and labels for training.
-    """
-
-    # Load images and labels
-    images = extract_images(images_path, indices, "satImage_")
-    labels = extract_images(labels_path, indices, "satImage_")
+def read_rotate_patch(images_path, labels_path, training_size, patch_size, overlap, overlap_amount, rotation, rotation_angles):
+    images = read_images(images_path, training_size, "satImage_")
+    labels = read_images(labels_path, training_size, "satImage_")
 
     # Get patches
     if overlap:
@@ -134,8 +110,8 @@ def prepare_train_patches(images_path, labels_path, indices, patch_size, overlap
 
     # Rotation needs to be applied on whole image
     if rotation:
-        images_rot = rotate_images(images, rotation_angles)
-        labels_rot = rotate_images(labels, rotation_angles)
+        images_rot = imageRotate(images, rotation_angles)
+        labels_rot = imageRotate(labels, rotation_angles)
 
         for im, label in zip(images_rot, labels_rot):
             p = patchify_no_corner(im, label, patch_size, overlap, overlap_amount)
@@ -145,13 +121,7 @@ def prepare_train_patches(images_path, labels_path, indices, patch_size, overlap
     return image_patches, label_patches
 
 
-"""
-Image rotation related helpers.
-"""
-def rotate_images(images, angles):
-    """
-    Rotates all the images by all the given angles.
-    """
+def imageRotate(images, angles):
     result = []
     for im in images:
         for angle in angles:

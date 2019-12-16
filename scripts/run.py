@@ -22,17 +22,12 @@ from mask_to_submission import *
 
 def main():
 
-    # Get augmentation configuration
-    rotation = True
-    rotation_angles = [45, 90, 135, 180, 225, 270, 315]
-
-    # Create dataset and dataloader
-    indices = np.arange(1, TRAINING_SIZE + 1)  # TODO change this
-    trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_LABEL_PATH, indices, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, rotation, rotation_angles)  # TODO change this
+    ''' Read training images '''
+    trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, TRAINING_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
     trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
 
     ''' Creating the Model '''
-    network, criterion, optimizer = create_UNET() # 3 layer
+    network, criterion, optimizer = create_UNET() # 3 layers
 
     ''' Reloading an old model if user defines so '''
     if (RELOAD_MODEL == True):
@@ -41,45 +36,38 @@ def main():
         network.load_state_dict(checkpoint['model_state'])
         optimizer.load_state_dict(checkpoint['optimizer_state'])
 
-
-    # slowDown = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)  # TODO: Check without it
-
-    # TODO: put early stopping
-
+    # TODO: optional, add: ReduceLROnPlateau
+    # TODO: optional, put early stopping
 
     # summary(model, input_size=(3,400,400)) # prints memory resources
-    # Train model
-    datasets, dataloaders = {'train': trainset}, {'train': trainloader}
-    scores, train_loss, val_loss, best_model_wts = training(NUM_EPOCHS, network, criterion, optimizer, datasets, dataloaders, PATCH_SIZE, validate=False)
-    print(scores, train_loss, val_loss)
 
-
-    # val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(network, criterion, optimizer, train_imgs, labels_bin, NUM_EPOCHS, RATIO, slowDown)
-
-
+    ''' Training phase '''
+    best_model_wts = training(NUM_EPOCHS, network, criterion, optimizer, trainset, trainloader, PATCH_SIZE)
 
     # Load testing data
-    test_indices = np.arange(1, NR_TEST_IMAGES + 1)
-    testset = AerialDataset(TEST_IMAGE_PATH, test_indices, aug_config, majority_voting=False) # TODO: Change this
+    testset = AerialDataset(TEST_IMAGE_PATH, NR_TEST_IMAGES)
     testloader = DataLoader(testset, batch_size=1, shuffle=False)
 
     # Predict labels
-    roadsPredicted = predict(network, testloader) # TODO: Change this
+    roadsPredicted = predict(network, testloader)
 
     # Transform pixel-wise prediction to patchwise
-    patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, TEST_PATCH_SIZE, 0.25) for labels in roadsPredicted]  # TODO: Change this
+    patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, IMG_PATCH_SIZE, 0.25) for labels in roadsPredicted]  # TODO: Change this
 
-    # Extract each patch
-    img_patches_submit = extract_patches(patched_images, TEST_PATCH_SIZE)
+    ''' Get patches for submission '''
+    patches = []
+    for im in patched_images:
+        patches.extend(img_crop(im, IMG_PATCH_SIZE, IMG_PATCH_SIZE))
 
     # Generate submission
-    generate_predictions(NR_TEST_IMAGES, TEST_IMG_SIZE, TEST_PATCH_SIZE, img_patches_submit, TEST_LABEL_PATH)
-    generate_submission_csv(SUBMISSION_PATH, TEST_LABEL_PATH)
+    generate_predictions(NR_TEST_IMAGES, TEST_IMG_SIZE, IMG_PATCH_SIZE, patches, PREDICTED_PATH)
+    generate_submission_csv(SUBMISSION_PATH, PREDICTED_PATH)
 
     print('Done')
-    print('Predictions generated in: {}'.format(TEST_LABEL_PATH))
+    print('Predictions generated in: {}'.format(PREDICTED_PATH))
     print('CSV submission generated in: {}'.format(SUBMISSION_PATH))
 
+    # # TODO: We should use this part to create a submission
     # ''' Predicting on the test images '''
     # filenames_list = test_and_save_predictions(model, test_imgs)
     #

@@ -11,22 +11,6 @@ import numpy
 PIXEL_DEPTH = 255
 IMG_PATCH_SIZE = 16
 
-def imshow_tensor(img):
-    """
-    Display an image given as tensor.
-    """
-    npimg = img.numpy()
-    plt.imshow(numpy.transpose(npimg, (1, 2, 0)))
-    plt.show()
-
-def imshow_tensor_gt(img):
-    """
-    Display label image given as tensor.
-    """
-    npimg = img.numpy()
-    plt.imshow(npimg[0])
-    plt.show()
-
 def generate_predictions(testing_size, test_image_size, test_patch_size, labels, path):
     """
     Generate prediction image from labels.

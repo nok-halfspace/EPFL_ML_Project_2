@@ -1,4 +1,3 @@
 #/bin/bash
 
-rm -rf *.png
-rm -rf ../Datasets/Prediction/prediction_*
+rm -rf ../Datasets/predictions/*

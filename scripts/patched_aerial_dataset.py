@@ -17,7 +17,6 @@ class Relabel:
         tensor[tensor >= MAX_VALUE / 2] = 1
         return tensor
 
-
 class ToLabel:
     """
     Transforms numpy labels to pytorch tensors.
@@ -30,9 +29,9 @@ class PatchedAerialDataset(Dataset):
     """
     Data set of pacthed arial images for a given path, indices, patch size, overlap and image augmentation.
     """
-    def __init__(self, images_path, labels_path, indices, patch_size, overlap, overlap_amount, rotation, rotation_angles):
+    def __init__(self, images_path, labels_path, training_size, patch_size, overlap, overlap_amount, rotation, rotation_angles):
         # Load images and labels
-        images, labels = prepare_train_patches(images_path, labels_path, indices, patch_size, overlap, overlap_amount, rotation, rotation_angles)
+        images, labels = read_rotate_patch(images_path, labels_path, training_size, patch_size, overlap, overlap_amount, rotation, rotation_angles)
         self.patched_images = images
         self.patched_labels = labels
 
