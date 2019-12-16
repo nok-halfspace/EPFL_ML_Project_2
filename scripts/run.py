@@ -54,7 +54,7 @@ def main():
     # Train model
     datasets, dataloaders = {'train': trainset}, {'train': trainloader}
     scores, train_loss, val_loss, best_model_wts = training(NUM_EPOCHS, network, criterion, optimizer, slowDown, datasets, dataloaders, PATCH_SIZE, validate=False)
-    print(scores, train_loss, val_loss, best_model_wts)
+    print(scores, train_loss, val_loss)
 
 
     # val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(network, criterion, optimizer, train_imgs, labels_bin, NUM_EPOCHS, RATIO, slowDown)
