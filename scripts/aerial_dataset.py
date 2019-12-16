@@ -25,7 +25,7 @@ def prepare_test_images(images_path, indices, aug_config, majority_voting=False)
         r1 = np.array(rotate_images(images, [90]))
         r2 = np.array(rotate_images(images, [180]))
         r3 = np.array(rotate_images(images, [270]))
-        images = np.concatenate((images, r1, r2, r3),axis=0)
+        images = np.concatenate((images, r1, r2, r3), axis = 0)
 
     # Augment channels if necessary
     if aug_config.augment_channels:

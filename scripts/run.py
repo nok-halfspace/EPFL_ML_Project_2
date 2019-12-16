@@ -45,7 +45,7 @@ def main():
         optimizer.load_state_dict(checkpoint['optimizer_state'])
 
 
-    slowDown = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)  # TODO: Check without it
+    # slowDown = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, verbose=True)  # TODO: Check without it
 
     # TODO: put early stopping
 
@@ -53,7 +53,7 @@ def main():
     # summary(model, input_size=(3,400,400)) # prints memory resources
     # Train model
     datasets, dataloaders = {'train': trainset}, {'train': trainloader}
-    scores, train_loss, val_loss, best_model_wts = training(NUM_EPOCHS, network, criterion, optimizer, slowDown, datasets, dataloaders, PATCH_SIZE, validate=False)
+    scores, train_loss, val_loss, best_model_wts = training(NUM_EPOCHS, network, criterion, optimizer, datasets, dataloaders, PATCH_SIZE, validate=False)
     print(scores, train_loss, val_loss)
 
 

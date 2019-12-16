@@ -3,18 +3,18 @@ import torch
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DISPLAY = False
-TRAINING_SIZE = 2 # Debug purposes
+TRAINING_SIZE = 5 # Debug purposes
 NUM_EPOCHS = 1
-NR_TEST_IMAGES = 50
+NR_TEST_IMAGES = 1
 rotateFlag = False
-RATIO = 0.75
+RATIO = 0.9
 IMG_PATCH_SIZE = 16
 DROPOUT = 0.2
 NUM_CLASSES = 1
 
 SUBMISSION_PATH, CHECKPOINT_PATH = '../submissions/', '../checkpoints/'
 TRAIN_IMAGE_PATH, TRAIN_LABEL_PATH = '../Datasets/training/images/', '../Datasets/training/groundtruth/'
-TEST_IMAGE_PATH, TEST_LABEL_PATH = '../Datasets/test_set_images/', '../Datasets/test/predictions/'
+TEST_IMAGE_PATH, TEST_LABEL_PATH = '../Datasets/test_set_images/', '../Datasets/predictions/'
 
 BATCH_SIZE = 128
 

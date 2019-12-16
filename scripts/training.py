@@ -40,7 +40,7 @@ def split_data(x,y,ratio, seed = 1):
 
 
 
-def training(num_epochs, model, criterion, optimizer, lr_scheduler, datasets, dataloaders, patch_size, validate=True):
+def training(num_epochs, model, criterion, optimizer, datasets, dataloaders, patch_size, validate=True):
     """
     TODO
     """
@@ -112,7 +112,7 @@ def training(num_epochs, model, criterion, optimizer, lr_scheduler, datasets, da
         # print(progress_str)
 
         # Adjust learning rate
-        lr_scheduler.step(int(np.mean(epoch_loss_train) * 1000))
+        # lr_scheduler.step(int(np.mean(epoch_loss_train) * 1000))
 
     # Load best model if validate mode enabled
     if validate:
