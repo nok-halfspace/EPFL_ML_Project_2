@@ -15,8 +15,6 @@ from preprocessing import *
 from helpers import *
 from mask_to_submission import *
 
-def score(x,y): # for now
-    return 0
 
 def Usage():
     print("Usage\n\tpython3 run.py [train/predict]")
