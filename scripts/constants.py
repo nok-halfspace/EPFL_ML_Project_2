@@ -3,8 +3,9 @@ import torch
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DISPLAY = False
-TRAINING_SIZE = 1 # Debug purposes
-VAL_SIZE = 1 # debug purpose
+TOTAL_TRAINING_SIZE = 100
+TRAINING_SIZE = RATIO * TOTAL_TRAINING_SIZE # Debug purposes
+VAL_SIZE = (1 - RATIO) * TOTAL_TRAINING_SIZE# debug purpose
 NUM_EPOCHS = 1
 NR_TEST_IMAGES = 50
 ROTATION = True
