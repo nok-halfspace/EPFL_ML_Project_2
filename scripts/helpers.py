@@ -7,8 +7,8 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy
+numpy.seterr(divide='ignore', invalid='ignore')
 
-PIXEL_DEPTH = 255
 IMG_PATCH_SIZE = 16
 
 def generate_predictions(testing_size, test_image_size, test_patch_size, labels, path):
@@ -53,7 +53,7 @@ def img_float_to_uint8(img):
     Transform float image to uint image.
     """
     rimg = img - numpy.min(img)
-    rimg = (rimg / numpy.max(rimg) * PIXEL_DEPTH).round().astype(numpy.uint8)
+    rimg = (rimg / numpy.max(rimg) * 255).round().astype(numpy.uint8)
     return rimg
 
 def to_rgb(gt_img):
@@ -118,7 +118,7 @@ def concatenate_images(img, gt_img):
 # Assign a label to a patch v
 def value_to_class(v):
     foreground_threshold = 0.25  # percentage of pixels > 1 required to assign a foreground label to a patch
-    df = np.mean(v)
+    df = numpy.mean(v)
     if df > foreground_threshold:  # road
         return 1
     else:  # bgrd
@@ -128,11 +128,10 @@ def patch_prediction(imgs, img_size, patch_size):
     imgs_predicted = []
     for i in range(len(imgs)):
         img = imgs[i]
-        img_patched = np.zeros([img_size, img_size])
+        img_patched = numpy.zeros([img_size, img_size])
         for i in range(0, img_size, patch_size):
             for j in range(0, img_size,patch_size):
                 patch = img[i : i+patch_size, j : j+patch_size]
                 img_patched[i : i+patch_size, j : j+patch_size] = value_to_class(patch)
         imgs_predicted.append(img_patched)
     return imgs_predicted
-
