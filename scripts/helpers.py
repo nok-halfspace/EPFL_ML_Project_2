@@ -6,9 +6,9 @@ import os
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from PIL import Image
-import numpy 
+import numpy
+numpy.seterr(divide='ignore', invalid='ignore')
 
-PIXEL_DEPTH = 255
 IMG_PATCH_SIZE = 16
 
 def probability_to_prediction(outputs):
@@ -59,7 +59,7 @@ def img_float_to_uint8(img):
     Transform float image to uint image.
     """
     rimg = img - numpy.min(img)
-    rimg = (rimg / numpy.max(rimg) * PIXEL_DEPTH).round().astype(numpy.uint8)
+    rimg = (rimg / numpy.max(rimg) * 255).round().astype(numpy.uint8)
     return rimg
 
 def to_rgb(gt_img):
@@ -130,4 +130,3 @@ def patch_prediction(imgs, img_size, patch_size):
                 img_patched[i : i+patch_size, j : j+patch_size] = value_to_class(patch)
         imgs_predicted.append(img_patched)
     return imgs_predicted
-

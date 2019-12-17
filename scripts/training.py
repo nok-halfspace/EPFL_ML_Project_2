@@ -12,7 +12,7 @@ def score(labels, outputs):
     labels = labels.squeeze().cpu().numpy().flatten()
     f1 = f1_score(labels, predictions)
     return f1
-    
+
 
 
 ''' Training function '''
@@ -59,7 +59,7 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
             optimizer.step()
 
             loss_value.append(loss.item())
-            correct.append(score(labels, outputs)) 
+            correct.append(score(labels, outputs))
 
         loss_value, loss_value_std = np.mean(loss_value), np.std(loss_value)
         f1,f1_std = np.mean(correct), np.std(correct)
@@ -99,7 +99,7 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
                 \t Train F1: {} +/- {} \n \
                 \t Validation loss: {} +/- {} \n \
                 \t Validation F1: {} +/- {} \
-                '.format(epoch, loss_value, loss_value_std,f1, f1_std, loss_validation, loss_validation_std, f1_validation, f1_validation_std),
+                '.format(epoch, loss_value, loss_value_std, f1, f1_std, loss_validation, loss_validation_std, f1_validation, f1_validation_std),
                     file=f)
 
     return val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_f1_hist, val_f1_hist_std, train_f1_hist, train_f1_hist_std

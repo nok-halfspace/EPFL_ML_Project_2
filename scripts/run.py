@@ -31,10 +31,13 @@ def main():
     ''' Creating the Model '''
     network, criterion, optimizer = create_smaller_UNET() # 3 layers
 
-    ''' Reloading an old model if user defines so ''' # <------- didn't test it recently
+    ''' Reloading an old model if user defines so '''
 
     if (sys.argv[1] == 'predict'):
-        network.load_state_dict(torch.load(MODEL_PATH).state_dict())
+        print("Loading the model... ")
+        checkpoint = torch.load(MODEL_PATH)
+        network.load_state_dict(checkpoint['state_dict'])
+
     elif (sys.argv[1] == 'train'): # train
         # TODO: optional, add: ReduceLROnPlateau
         # TODO: optional, put early stopping
@@ -50,7 +53,8 @@ def main():
 
         ''' Training phase '''
         val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_acc_hist, val_acc_hist_std, train_acc_hist, train_acc_hist_std = training(network, criterion, optimizer, score, trainloader, valloader, PATCH_SIZE, NUM_EPOCHS)
-        torch.save(network, MODEL_PATH)
+        print("Saving the model... ")
+        torch.save({'state_dict': network.state_dict()}, MODEL_PATH)
     else:
         print("Argument not recognized")
         Usage()
@@ -60,6 +64,9 @@ def main():
     loader_test = DataLoader(testset, batch_size=1, shuffle=False) # To do : increase the batch_size
     # Predict labels
     roadsPredicted = predict_test_images(network, loader_test)
+
+    print(len(roadsPredicted))
+    print(roadsPredicted[0].shape)
 
     # Transform pixel-wise prediction to patchwise
     patched_images = patch_prediction(roadsPredicted, TEST_IMG_SIZE, IMG_PATCH_SIZE)
