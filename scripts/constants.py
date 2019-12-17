@@ -4,8 +4,8 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DISPLAY = False
 TRAINING_SIZE = 10 # Debug purposes
-NUM_EPOCHS = 1
-NR_TEST_IMAGES = 5
+NUM_EPOCHS = 2
+NR_TEST_IMAGES = 50
 ROTATION = True
 ROTATION_ANGLES = [45, 90, 135, 180, 225, 270, 315]
 RATIO = 0.9
@@ -13,7 +13,7 @@ IMG_PATCH_SIZE = 16
 DROPOUT = 0.2
 NUM_CLASSES = 1
 
-SUBMISSION_PATH           = '../submissions/',
+SUBMISSION_PATH           = '../submissions/'
 CHECKPOINT_PATH           = '../checkpoints/'
 TRAIN_IMAGE_PATH          = '../Datasets/training/images/'
 TRAIN_GROUNDTRUTH_PATH    = '../Datasets/training/groundtruth/'

@@ -50,7 +50,7 @@ def training(num_epochs, model, criterion, optimizer, trainset, trainloader, pat
 
         step = 1
         for data in trainloader:
-            print("Epoch:", epoch+1, "/", num_epochs, "step", step, "/", len(trainloader))
+            print("Epoch:", epoch+1, "/", num_epochs, " - Step", step, "/", len(trainloader))
             step += 1
 
             inputs, labels = data[0].to(DEVICE), data[1].to(DEVICE)
