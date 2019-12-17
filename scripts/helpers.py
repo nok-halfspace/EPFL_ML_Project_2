@@ -11,6 +11,12 @@ numpy.seterr(divide='ignore', invalid='ignore')
 
 IMG_PATCH_SIZE = 16
 
+def probability_to_prediction(outputs):
+    predictions = (outputs > 0.5).squeeze()
+    predictions = predictions.cpu().numpy().astype(int)
+    return predictions
+
+
 def generate_predictions(testing_size, test_image_size, test_patch_size, labels, path):
     """
     Generate prediction image from labels.
