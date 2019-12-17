@@ -64,7 +64,8 @@ def main():
     roadsPredicted = predict_test_images(network, loader_test)
 
     # Transform pixel-wise prediction to patchwise
-    patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, IMG_PATCH_SIZE, 0.25) for labels in roadsPredicted]  # TODO: Change this
+    patched_images = patch_prediction(roadsPredicted, TEST_IMG_SIZE, IMG_PATCH_SIZE)
+    #patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, IMG_PATCH_SIZE, 0.25) for labels in roadsPredicted]  # TODO: Change this
 
     ''' Get patches for submission '''
     patches = []

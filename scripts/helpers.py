@@ -103,14 +103,36 @@ def concatenate_images(img, gt_img):
         cimg = numpy.concatenate((img8, gt_img_3c), axis=1)
     return cimg
 
-def labels_to_patches(image, img_size, p_size, threshold):
-    """
-    Transform pixel-wise label image, to patch-wise label image.
-    """
-    array_labels = numpy.zeros([img_size, img_size])
-    for i in range(0, img_size, p_size):
-        for j in range(0, img_size, p_size):
-            mean = numpy.mean(image[i : i+p_size, j : j+p_size])
-            if mean > threshold: array_labels[i : i+p_size, j : j+p_size] = 1
-            else: array_labels[i : i+p_size, j : j+p_size] = 0
-    return array_labels
+# def labels_to_patches(image, img_size, p_size, threshold):
+#     """
+#     Transform pixel-wise label image, to patch-wise label image.
+#     """
+#     array_labels = numpy.zeros([img_size, img_size])
+#     for i in range(0, img_size, p_size):
+#         for j in range(0, img_size, p_size):
+#             mean = numpy.mean(image[i : i+p_size, j : j+p_size])
+#             if mean > threshold: array_labels[i : i+p_size, j : j+p_size] = 1
+#             else: array_labels[i : i+p_size, j : j+p_size] = 0
+#     return array_labels
+
+# Assign a label to a patch v
+def value_to_class(v):
+    foreground_threshold = 0.25  # percentage of pixels > 1 required to assign a foreground label to a patch
+    df = np.mean(v)
+    if df > foreground_threshold:  # road
+        return 1
+    else:  # bgrd
+        return 0
+
+def patch_prediction(imgs, img_size, patch_size):
+    imgs_predicted = []
+    for i in range(len(imgs)):
+        img = imgs[i]
+        img_patched = np.zeros([img_size, img_size])
+        for i in range(0, img_size, patch_size):
+            for j in range(0, img_size,patch_size):
+                patch = img[i : i+patch_size, j : j+patch_size]
+                img_patched[i : i+patch_size, j : j+patch_size] = value_to_class(patch)
+        imgs_predicted.append(img_patched)
+    return imgs_predicted
+
