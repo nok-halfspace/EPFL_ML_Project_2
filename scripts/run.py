@@ -63,7 +63,6 @@ def main():
 
     # Transform pixel-wise prediction to patchwise
     patched_images = patch_prediction(roadsPredicted, TEST_IMG_SIZE, IMG_PATCH_SIZE)
-    #patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, IMG_PATCH_SIZE, 0.25) for labels in roadsPredicted]  # TODO: Change this
 
     ''' Get patches for submission '''
     patches = []
@@ -72,7 +71,7 @@ def main():
 
     # Generate submission
     generate_predictions(NR_TEST_IMAGES, TEST_IMG_SIZE, IMG_PATCH_SIZE, patches, PREDICTED_PATH)
-    generate_submission_csv(SUBMISSION_PATH, PREDICTED_PATH)
+    submission_to_csv(SUBMISSION_PATH, PREDICTED_PATH)
 
     print('Done')
     print('Predictions generated in: {}'.format(PREDICTED_PATH))

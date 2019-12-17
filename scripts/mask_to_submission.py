@@ -1,5 +1,6 @@
 """
-Helpers functions for Kaggle submission generation.
+Helpers functions for AICrowd submission generation 
+These functions were taken and adapted from mask_to_submission.py provided by the EPFL ML course
 """
 import os
 import numpy as np
@@ -9,6 +10,17 @@ import time
 
 # Percentage of pixels > 1 required to assign a foreground label to a patch
 foreground_threshold = 0.25
+
+def patch_to_label(patch):
+    """
+    Assign label to a patch.
+    """
+    df = np.mean(patch)
+    if df > foreground_threshold:
+        return 1
+    else:
+        return 0
+
 
 def mask_to_submission_strings(image_filename):
     """
@@ -25,34 +37,21 @@ def mask_to_submission_strings(image_filename):
 
 
 def masks_to_submission(submission_filename, *image_filenames):
-    """
-    Converts images into a submission file.
-    """
+    """ Converts images into a submission file. """
     with open(submission_filename, 'w+') as f:
         f.write('id,prediction\n')
         for fn in image_filenames[0:]:
             f.writelines('{}\n'.format(s) for s in mask_to_submission_strings(fn))
 
 
-def generate_submission_csv(submission_path, predictions_path):
-    """
-    Generate CSV submission from predicted images.
-    """
-    today = time.strftime("%d-%m-%Y")
-    submission_filename = submission_path + 'submission_' + today +'.csv'
+def submission_to_csv(submission_path, predictions_path):
+    """ Write a csv for  submitting the results """
+    date = time.strftime("%d-%m-%Y")
+    submission_filename = submission_path + 'submission_' + date +'.csv'
     image_filenames = []
     for i in range(1, 51):
         image_filename = predictions_path + 'satImage_' + '%.3d' % i + '.png'
         print(image_filename)
         image_filenames.append(image_filename)
-        masks_to_submission(submission_filename, *image_filenames)
+    masks_to_submission(submission_filename, *image_filenames)
 
-def patch_to_label(patch):
-    """
-    Assign label to a patch.
-    """
-    df = np.mean(patch)
-    if df > foreground_threshold:
-        return 1
-    else:
-        return 0
