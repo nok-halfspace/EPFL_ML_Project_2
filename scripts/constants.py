@@ -19,12 +19,13 @@ TRAIN_IMAGE_PATH          = '../Datasets/training/images/'
 TRAIN_GROUNDTRUTH_PATH    = '../Datasets/training/groundtruth/'
 TEST_IMAGE_PATH           = '../Datasets/test_set_images/'
 PREDICTED_PATH            = '../Datasets/predictions/'
+MODEL_PATH                = '../model.weights'
 
 BATCH_SIZE = 128
 
 # TODO: Change these names
 PATCH_SIZE      = 80
-OVERLAP         = True # Always true : should remove that 
+OVERLAP         = True # Always true : should remove that
 OVERLAP_AMOUNT  = 20
 TEST_IMG_SIZE   = 608
 

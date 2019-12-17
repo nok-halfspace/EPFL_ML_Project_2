@@ -1,5 +1,5 @@
 import torch
-from models2 import *
+from models import *
 from testing import *
 from preprocessing import *
 from training import training
@@ -19,40 +19,36 @@ def score(x,y): # for now
     return 0
 
 def main():
-
     ''' Read training images '''
     trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, TRAINING_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
     trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
-    
+
     # to do : find a consistent number of images for validation
     valset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, VAL_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
     valloader = DataLoader(valset, batch_size=BATCH_SIZE, shuffle=True)
 
     ''' Creating the Model '''
-    network, criterion, optimizer = create_UNET() # 3 layers
+    network, criterion, optimizer = create_smaller_UNET() # 3 layers
 
     ''' Reloading an old model if user defines so ''' # <------- didn't test it recently
-    if (RELOAD_MODEL == True):
-        print("Reloading the model from the disk...")
-        checkpoint = torch.load(MODEL_PATH)
-        network.load_state_dict(checkpoint['model_state'])
-        optimizer.load_state_dict(checkpoint['optimizer_state'])
 
-    # TODO: optional, add: ReduceLROnPlateau
-    # TODO: optional, put early stopping
+    if (sys.argv[1] == 'predict'):
+        network.load_state_dict(torch.load(MODEL_PATH).state_dict())
+    elif (sys.argv[1] == 'train'): # train
+        # TODO: optional, add: ReduceLROnPlateau
+        # TODO: optional, put early stopping
 
-    # summary(model, input_size=(3,400,400)) # prints memory resources
+        ''' Training phase '''
+        val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_acc_hist, val_acc_hist_std, train_acc_hist, train_acc_hist_std = training(network, criterion, optimizer, score, trainloader, valloader, PATCH_SIZE, NUM_EPOCHS)
+        torch.save(network, MODEL_PATH)
+    else:
+        print("Argument not recognized")
 
-    ''' Training phase '''
-    best_model_wts, val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_acc_hist, val_acc_hist_std, train_acc_hist, train_acc_hist_std = training(network, criterion, optimizer, score, trainloader, valloader, PATCH_SIZE, NUM_EPOCHS)
-    
-    
     # Load testing data
     testset = AerialDataset(TEST_IMAGE_PATH, NR_TEST_IMAGES)
-    testloader = DataLoader(testset, batch_size=1, shuffle=False) # To do : increase the batch_size 
-
+    loader_test = DataLoader(testset, batch_size=1, shuffle=False) # To do : increase the batch_size
     # Predict labels
-    roadsPredicted = predict(network, testloader)
+    roadsPredicted = predict_test_images(network, loader_test)
 
     # Transform pixel-wise prediction to patchwise
     patched_images = [labels_to_patches(labels, TEST_IMG_SIZE, IMG_PATCH_SIZE, 0.25) for labels in roadsPredicted]  # TODO: Change this
@@ -76,7 +72,7 @@ def main():
     #
     # ''' create csv files '''
     # masks_to_submission(submissionFileName, filenames_list)
-    #
+
     # ''' create label images from csv '''
     # for i in range(1, NR_TEST_IMAGES+1):
     #     reconstruct_from_labels(i, submissionFileName)
