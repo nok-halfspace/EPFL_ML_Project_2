@@ -27,10 +27,8 @@ def generate_predictions(testing_size, test_image_size, test_patch_size, labels,
         img = Image.fromarray(to_rgb(prediction))
         img.save(path + "satImage_%.3d" % k + ".png")
 
+# from tf_aerial_images
 def label_to_img(imgwidth, imgheight, w, h, labels):
-    """
-    Transform labels to image.
-    """
     array_labels = numpy.zeros([imgwidth, imgheight])
     idx = 0
     for i in range(0,imgheight,h):
@@ -38,24 +36,6 @@ def label_to_img(imgwidth, imgheight, w, h, labels):
             array_labels[j:j+w, i:i+h] = labels[idx]
             idx = idx + 1
     return array_labels
-
-def img_crop(im, w, h):
-    """
-    Extract patches from given image.
-    """
-    list_patches = []
-    imgwidth, imgheight = im.shape[0], im.shape[1]
-
-    is_2d = len(im.shape) < 3
-    for i in range(0, imgheight, h):
-        for j in range(0, imgwidth, w):
-            if is_2d:
-                im_patch = im[j:j+w, i:i+h]
-            else:
-                im_patch = im[j:j+w, i:i+h, :]
-            list_patches.append(im_patch)
-
-    return list_patches
 
 
 def extract_patches(images, patch_size):

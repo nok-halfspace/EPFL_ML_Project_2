@@ -5,6 +5,24 @@ from skimage.util import view_as_windows
 import os
 import matplotlib.image as mpimg
 
+
+
+# Extract patches from a given image, function from tf_aerial_images
+def img_crop(im, w, h):
+    list_patches = []
+    imgwidth = im.shape[0]
+    imgheight = im.shape[1]
+    is_2d = len(im.shape) < 3
+    for i in range(0, imgheight, h):
+        for j in range(0, imgwidth, w):
+            if is_2d:
+                im_patch = im[j:j+w, i:i+h]
+            else:
+                im_patch = im[j:j+w, i:i+h, :]
+            list_patches.append(im_patch)
+    return list_patches
+
+
 def read_images(pathFile, training_size, imgName):
     print ('Reading', training_size, 'images...')
     images = []

@@ -1,11 +1,7 @@
 import torch
-import torch.nn as nn
 from models2 import *
 from testing import *
 from preprocessing import *
-import matplotlib.pyplot as plt
-import torch.optim as optim
-import torch.nn.functional as F
 from training import training
 from constants import *
 from torchsummary import summary
@@ -16,7 +12,7 @@ import numpy as np
 from aerial_dataset import AerialDataset
 from patched_aerial_dataset import PatchedAerialDataset
 from preprocessing import *
-from visualization.helpers import *
+from helpers import *
 from mask_to_submission import *
 
 
@@ -29,7 +25,7 @@ def main():
     ''' Creating the Model '''
     network, criterion, optimizer = create_UNET() # 3 layers
 
-    ''' Reloading an old model if user defines so '''
+    ''' Reloading an old model if user defines so ''' # <------- didn't test it recently
     if (RELOAD_MODEL == True):
         print("Reloading the model from the disk...")
         checkpoint = torch.load(MODEL_PATH)
