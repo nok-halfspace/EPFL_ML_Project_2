@@ -77,7 +77,7 @@ def main():
         patches.extend(img_crop(im, IMG_PATCH_SIZE, IMG_PATCH_SIZE))
 
     # Generate submission
-    generate_predictions(NR_TEST_IMAGES, TEST_IMG_SIZE, IMG_PATCH_SIZE, patches, PREDICTED_PATH)
+    reconstruct_img(NR_TEST_IMAGES, TEST_IMG_SIZE, IMG_PATCH_SIZE, patches, PREDICTED_PATH)
     submission_to_csv(SUBMISSION_PATH, PREDICTED_PATH)
 
     print('Done')
