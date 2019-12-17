@@ -18,4 +18,5 @@ pip3 install -r requirements.txt
 
 How to train the neural network:   
   `cd scripts`   
-  `python3 run.py`   
+  `python3 run.py train`   train and predict     
+  `python3 run.py predict`   predict  test images    
