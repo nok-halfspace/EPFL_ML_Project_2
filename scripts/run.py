@@ -24,6 +24,7 @@ def main():
     trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, TRAINING_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
     trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
     
+    # to do : find a consistent number of images for validation
     valset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, VAL_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
     valloader = DataLoader(valset, batch_size=BATCH_SIZE, shuffle=True)
 

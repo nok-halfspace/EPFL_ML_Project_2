@@ -22,10 +22,6 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
     train_loss_hist = []
     train_loss_hist_std = []
     
-    # For validation (80 % training / 20 % validation every ten epochs)
-    train_size = int(0.8 * BATCH_SIZE)
-    test_size = BATCH_SIZE - train_size
-
     print('Training the model...')
     for epoch in range(num_epochs):
         loss_value = []
@@ -54,7 +50,7 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
             optimizer.step()
             
             loss_value.append(loss.item()) 
-            correct.append(score(labels, outputs)) # Get a normalized score over the batch size
+            correct.append(score(labels, outputs)) # Get a normalized score over the batch size  # In score => put the prediction 0 or 1
                 
         train_loss_hist.append(np.mean(loss_value))
         train_loss_hist_std.append(np.std(loss_value))
@@ -71,11 +67,12 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
                 inputs, labels = data[0].to(DEVICE), data[1].to(DEVICE)
             
             # Training step 
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
+                with torch.no_grad() :
+                    outputs = model(inputs)
+                    loss = criterion(outputs, labels)
             
-                loss_value_val.append(loss.item())
-                correct_val.append(score(labels, outputs))
+                    loss_value_val.append(loss.item())
+                    correct_val.append(score(labels, outputs))
        
         
         val_loss_hist.append(np.mean(loss_value_val))
