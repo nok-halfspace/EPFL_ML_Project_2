@@ -114,7 +114,10 @@ class UNET(nn.Module):
         self.expand2 = self.expanding_block(256, 128)
 
         # Final block
-        self.output = self.output_block(128, 2)
+        self.output = self.output_block(128, 1)
+        
+        # Getting the prediction
+        self.Sigmoid = nn.Sigmoid()
 
 
     def doubleConv_block(self, in_channels, out_channels, p_dropout = 0.5):
@@ -142,7 +145,7 @@ class UNET(nn.Module):
         return expanding_block
 
 
-    def output_block(self, in_channels = 128, out_channels = 2):
+    def output_block(self, in_channels = 128, out_channels = 1):
         tmp_channels = in_channels // 2
         output_block = torch.nn.Sequential(
             self.doubleConv_block(in_channels, tmp_channels),
@@ -180,18 +183,16 @@ class UNET(nn.Module):
         layer2_ascending = self.expand3(self.concatenating_block(layer3_descending, layer3_ascending))
         layer1_ascending = self.expand2(self.concatenating_block(layer2_descending, layer2_ascending))
         output = self.output(self.concatenating_block(layer1_descending, layer1_ascending))
+        
+        output = self.Sigmoid(output)
 
-        # Converting into vector
-        #output = output.view(TRAINING_SIZE, N_CLASSES, -1)
-        #print('output vector', output.shape)
-        #finally no need to convert into vector with nn.crossentropy.loss
 
         return output
 
 
 def create_UNET():
     network = UNET().to(DEVICE)
-    criterion = nn.CrossEntropyLoss().to(DEVICE)
+    criterion = nn.BCEWithLogitsLoss().to(DEVICE)
     optimizer = optim.Adam(network.parameters())
     return network, criterion, optimizer
 
