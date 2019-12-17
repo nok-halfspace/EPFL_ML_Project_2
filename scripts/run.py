@@ -18,14 +18,17 @@ from mask_to_submission import *
 def score(x,y): # for now
     return 0
 
-def main():
-    ''' Read training images '''
-    trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, TRAINING_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
-    trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
+def Usage():
+    print("Usage\n\tpython3 run.py [train/predict]")
+    exit(1)
 
-    # to do : find a consistent number of images for validation
-    valset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, VAL_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
-    valloader = DataLoader(valset, batch_size=BATCH_SIZE, shuffle=True)
+def main():
+
+    # Safety checkpoint
+    if (len(sys.argv) < 2 or len(sys.argv) > 3):
+        print('Number of arguments is incorrect')
+        Usage()
+
 
     ''' Creating the Model '''
     network, criterion, optimizer = create_smaller_UNET() # 3 layers
@@ -37,12 +40,22 @@ def main():
     elif (sys.argv[1] == 'train'): # train
         # TODO: optional, add: ReduceLROnPlateau
         # TODO: optional, put early stopping
+        ''' Read training images '''
+        print(TRAINING_SIZE, VAL_SIZE)
+        trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, int(TRAINING_SIZE), PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
+        trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
+
+        # to do : find a consistent number of images for validation
+        valset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, int(VAL_SIZE), PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
+        valloader = DataLoader(valset, batch_size=BATCH_SIZE, shuffle=True)
+
 
         ''' Training phase '''
         val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_acc_hist, val_acc_hist_std, train_acc_hist, train_acc_hist_std = training(network, criterion, optimizer, score, trainloader, valloader, PATCH_SIZE, NUM_EPOCHS)
         torch.save(network, MODEL_PATH)
     else:
         print("Argument not recognized")
+        Usage()
 
     # Load testing data
     testset = AerialDataset(TEST_IMAGE_PATH, NR_TEST_IMAGES)

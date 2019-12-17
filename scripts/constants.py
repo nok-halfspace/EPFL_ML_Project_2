@@ -1,16 +1,17 @@
 import torch
+import math
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DISPLAY = False
-TOTAL_TRAINING_SIZE = 100
-TRAINING_SIZE = RATIO * TOTAL_TRAINING_SIZE # Debug purposes
-VAL_SIZE = (1 - RATIO) * TOTAL_TRAINING_SIZE# debug purpose
+TOTAL_TRAINING_SIZE = 10
+RATIO = 0.9
+TRAINING_SIZE = int(RATIO * TOTAL_TRAINING_SIZE) # Debug purposes
+VAL_SIZE = math.ceil((1 - RATIO) * TOTAL_TRAINING_SIZE) # debug purpose
 NUM_EPOCHS = 1
 NR_TEST_IMAGES = 50
 ROTATION = True
 ROTATION_ANGLES = [45, 90, 135, 180, 225, 270, 315]
-RATIO = 0.9
 IMG_PATCH_SIZE = 16
 NUM_CLASSES = 1
 
