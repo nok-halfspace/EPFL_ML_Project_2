@@ -15,12 +15,17 @@ from preprocessing import *
 from helpers import *
 from mask_to_submission import *
 
+def score(x,y): # for now
+    return 0
 
 def main():
 
     ''' Read training images '''
     trainset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, TRAINING_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
     trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
+    
+    valset = PatchedAerialDataset(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, VAL_SIZE, PATCH_SIZE, OVERLAP, OVERLAP_AMOUNT, ROTATION, ROTATION_ANGLES)  # TODO change this
+    valloader = DataLoader(valset, batch_size=BATCH_SIZE, shuffle=True)
 
     ''' Creating the Model '''
     network, criterion, optimizer = create_UNET() # 3 layers
@@ -38,11 +43,12 @@ def main():
     # summary(model, input_size=(3,400,400)) # prints memory resources
 
     ''' Training phase '''
-    best_model_wts = training(NUM_EPOCHS, network, criterion, optimizer, trainset, trainloader, PATCH_SIZE)
-
+    best_model_wts, val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_acc_hist, val_acc_hist_std, train_acc_hist, train_acc_hist_std = training(network, criterion, optimizer, score, trainloader, valloader, PATCH_SIZE, NUM_EPOCHS)
+    
+    
     # Load testing data
     testset = AerialDataset(TEST_IMAGE_PATH, NR_TEST_IMAGES)
-    testloader = DataLoader(testset, batch_size=1, shuffle=False)
+    testloader = DataLoader(testset, batch_size=1, shuffle=False) # To do : increase the batch_size 
 
     # Predict labels
     roadsPredicted = predict(network, testloader)

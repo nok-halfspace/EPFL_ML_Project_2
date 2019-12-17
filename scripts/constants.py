@@ -4,6 +4,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DISPLAY = False
 TRAINING_SIZE = 1 # Debug purposes
+VAL_SIZE = 1 # debug purpose
 NUM_EPOCHS = 1
 NR_TEST_IMAGES = 50
 ROTATION = True
@@ -22,7 +23,7 @@ BATCH_SIZE = 128
 
 # TODO: Change these names
 PATCH_SIZE      = 80
-OVERLAP         = True
+OVERLAP         = True # Always true : should remove that 
 OVERLAP_AMOUNT  = 20
 TEST_IMG_SIZE   = 608
 
