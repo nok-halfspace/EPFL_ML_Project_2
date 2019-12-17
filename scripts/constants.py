@@ -4,10 +4,10 @@ import math
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 DISPLAY = False
-TOTAL_TRAINING_SIZE = 10
+TOTAL_TRAINING_SIZE = 5
 RATIO = 0.9
-TRAINING_SIZE = int(RATIO * TOTAL_TRAINING_SIZE) # Debug purposes
-VAL_SIZE = math.ceil((1 - RATIO) * TOTAL_TRAINING_SIZE) # debug purpose
+TRAINING_SIZE = int(RATIO * TOTAL_TRAINING_SIZE) 
+VAL_SIZE = math.ceil((1 - RATIO) * TOTAL_TRAINING_SIZE) 
 NUM_EPOCHS = 1
 NR_TEST_IMAGES = 50
 ROTATION = True

@@ -6,10 +6,16 @@ import os
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from PIL import Image
-import numpy
+import numpy 
 
 PIXEL_DEPTH = 255
 IMG_PATCH_SIZE = 16
+
+def probability_to_prediction(outputs):
+    predictions = (outputs > 0.5).squeeze()
+    predictions = predictions.cpu().numpy().astype(int)
+    return predictions
+
 
 def generate_predictions(testing_size, test_image_size, test_patch_size, labels, path):
     """
@@ -118,7 +124,7 @@ def concatenate_images(img, gt_img):
 # Assign a label to a patch v
 def value_to_class(v):
     foreground_threshold = 0.25  # percentage of pixels > 1 required to assign a foreground label to a patch
-    df = np.mean(v)
+    df = numpy.mean(v)
     if df > foreground_threshold:  # road
         return 1
     else:  # bgrd
@@ -128,7 +134,7 @@ def patch_prediction(imgs, img_size, patch_size):
     imgs_predicted = []
     for i in range(len(imgs)):
         img = imgs[i]
-        img_patched = np.zeros([img_size, img_size])
+        img_patched = numpy.zeros([img_size, img_size])
         for i in range(0, img_size, patch_size):
             for j in range(0, img_size,patch_size):
                 patch = img[i : i+patch_size, j : j+patch_size]

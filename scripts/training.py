@@ -3,7 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from constants import *
 import numpy as np
-from torch.utils.data import random_split
+from sklearn.metrics import f1_score
+from helpers import probability_to_prediction
+
+
+def score(labels, outputs):
+    predictions = probability_to_prediction(outputs).flatten()
+    labels = labels.squeeze().cpu().numpy().flatten()
+    f1 = f1_score(labels, predictions)
+    return f1
+    
 
 
 ''' Training function '''
@@ -12,11 +21,11 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
     # Log of the losses and scores
     val_loss_hist = []
     val_loss_hist_std = []
-    val_acc_hist = []
-    val_acc_hist_std = []
+    val_f1_hist = []
+    val_f1_hist_std = []
 
-    train_acc_hist = []
-    train_acc_hist_std = []
+    train_f1_hist = []
+    train_f1_hist_std = []
     train_loss_hist = []
     train_loss_hist_std = []
 
@@ -50,16 +59,16 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
             optimizer.step()
 
             loss_value.append(loss.item())
-            correct.append(score(labels, outputs)) # Get a normalized score over the batch size  # In score => put the prediction 0 or 1
+            correct.append(score(labels, outputs)) 
 
         loss_value, loss_value_std = np.mean(loss_value), np.std(loss_value)
-        accuracy, accuracy_std = np.mean(correct), np.std(correct)
+        f1,f1_std = np.mean(correct), np.std(correct)
 
         train_loss_hist.append(loss_value)
         train_loss_hist_std.append(loss_value_std)
 
-        train_acc_hist.append(accuracy)
-        train_acc_hist_std.append(accuracy_std)
+        train_f1_hist.append(f1)
+        train_f1_hist_std.append(f1_std)
 
         # Validation part
 
@@ -76,22 +85,21 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
                 correct_val.append(score(labels, outputs))
 
         loss_validation, loss_validation_std = np.mean(loss_value_val), np.std(loss_value_val)
-        accuracy_validation, accuracy_validation_std = np.mean(correct_val), np.std(correct_val)
+        f1_validation, f1_validation_std = np.mean(correct_val), np.std(correct_val)
 
 
         val_loss_hist.append(loss_validation)
         val_loss_hist_std.append(loss_validation_std)
-        val_acc_hist.append(accuracy_validation)
-        val_acc_hist_std.append(accuracy_validation_std)
+        val_f1_hist.append(f1_validation)
+        val_f1_hist_std.append(f1_validation_std)
 
         # Print at each epoch the evolution of quantities
         print('Epoch {} \n \
-                \t f1 score: {} \n \
                 \t Train loss: {} +/- {} \n \
                 \t Train F1: {} +/- {} \n \
                 \t Validation loss: {} +/- {} \n \
                 \t Validation F1: {} +/- {} \
-                '.format(epoch, 0, loss_value, loss_value_std, accuracy, accuracy_std, loss_validation, loss_validation_std, accuracy_validation, accuracy_validation_std),
+                '.format(epoch, loss_value, loss_value_std,f1, f1_std, loss_validation, loss_validation_std, f1_validation, f1_validation_std),
                     file=f)
 
-    return val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_acc_hist, val_acc_hist_std, train_acc_hist, train_acc_hist_std
+    return val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_f1_hist, val_f1_hist_std, train_f1_hist, train_f1_hist_std
