@@ -15,13 +15,13 @@ Install:
 For Ubuntu 18.04 LTS run:     
 `sudo apt-get update`      
 `sudo apt install python3-pip`
-`sudo apt-get install python3-tk`  
-`sudo pip3 install scikit-image`   
 than ,    
 
 Install all the necessary dependencies:
 ```bash
 pip3 install -r requirements.txt
+sudo apt-get install python3-tk
+sudo pip3 install scikit-image
 ```
 
 Requirements:
@@ -30,7 +30,8 @@ Requirements:
 * torchvision 0.4.2
 * sklearn 0.22
 * matplotlib 2.1.0  
-* scikit-image 
+* scikit-image
+* scikit-image
 
 Optional   
 * torchsummary  (used to print neural network details)
