@@ -85,7 +85,7 @@ class smaller_UNET(nn.Module):
 
 def create_smaller_UNET():
     network = smaller_UNET().to(DEVICE)
-    criterion = nn.BCEWithLogitsLoss().to(DEVICE)
+    criterion = nn.BCELoss().to(DEVICE)
     optimizer = optim.Adam(network.parameters())
     return network, criterion, optimizer
 
@@ -192,6 +192,6 @@ class UNET(nn.Module):
 
 def create_UNET():
     network = UNET().to(DEVICE)
-    criterion = nn.BCEWithLogitsLoss().to(DEVICE)
+    criterion = nn.BCELoss().to(DEVICE)
     optimizer = optim.Adam(network.parameters())
     return network, criterion, optimizer
