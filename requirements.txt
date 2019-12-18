@@ -1,7 +1,6 @@
 torch==1.3.1
 torchvision==0.4.2
 matplotlib==2.1.0
-tkinter
 sklearn
 torchsummary
 psutil
