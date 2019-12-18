@@ -50,7 +50,7 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
             loss.backward()
             optimizer.step()
 
-            loss_value.append(loss.item())
+            loss_value.append(loss.item() / BATCH_SIZE)
             correct.append(score(labels, outputs))
 
         loss_value, loss_value_std = np.mean(loss_value), np.std(loss_value)
