@@ -1,73 +1,76 @@
-
-
 import torch
-import torch.nn as nn
+from training import training
+from torchsummary import summary
+from torch.utils.data import DataLoader, Dataset
+import numpy as np
+from utils import *
+from constants import *
 from models import *
 from testing import *
-from preprocessing import *
-import matplotlib.pyplot as plt
-import torch.optim as optim
-import torch.nn.functional as F
-from training import training
-from constants import *
-from torchsummary import summary
+from prepareData import *
+from mask_to_submission import *
+from DatasetPatch import *
+from testDataset import *
+from prepareData import *
 
 
+def Usage():
+    print("Usage\n\tpython3 run.py [--train/--predict]")
+    exit(1)
 
 
 def main():
 
-    # process = psutil.Process(os.getpid()) ## in case we need to verify memory usage
-    # print(process.memory_info().rss/1024/1024)  # in Mbytes
-
-    # Reading test images
-    test_imgs = readTestImages(test_dir, NR_TEST_IMAGES)
-
-    ''' Reading training images '''
-    train_imgs, r_imgs = readTrainingImages(TRAINING_SIZE, data_dir, train_data_filename, rotateFlag) # groundtruth
-    labels, r_labels = readTrainingImages(TRAINING_SIZE, data_dir, train_labels_filename, rotateFlag) # labels
-
-    ''' Preprocessing, getting the labels via 16 x 16 patches of the raw input '''
-    labels = F.pad(labels, (2, 2, 2, 2), mode = 'reflect') # to get a label vector of the same size as our network's output
-    labels_bin =  torch.stack([value_to_label_by_patches(labels[i]) for i in range(TRAINING_SIZE)]) # decimal to binary
-
-    # for image in labels_bin:
-    #     plt.figure()
-    #     plt.imshow(image.numpy(), cmap="gray")
-    #     plt.show()
-    # quit()
+    # Safety checkpoint
+    if (len(sys.argv) < 2 or len(sys.argv) > 3):
+        print('Number of arguments is incorrect')
+        Usage()
 
     ''' Creating the Model '''
-    model = create_smallerUNET() # 4 layer
-    loss = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters())
+    network, criterion, optimizer = create_smaller_UNET() # 3 layers model
 
-    ''' Reloading an old model if user defines so '''
-    if (RELOAD_MODEL == True):
-        print("Reloading the model from the disk...")
+    if (sys.argv[1] == '--predict'):
+        print("Loading the model... ")
         checkpoint = torch.load(MODEL_PATH)
-        model.load_state_dict(checkpoint['model_state'])
-        optimizer.load_state_dict(checkpoint['optimizer_state'])
+        network.load_state_dict(checkpoint['state_dict'])
 
-    ''' Training all (TRAINING_SIZE) images '''
-    model.eval()
-    # summary(model, input_size=(3,400,400)) # prints memory resources
-    val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist = training(model, loss, optimizer, train_imgs, labels_bin, NUM_EPOCHS, RATIO)
+    elif (sys.argv[1] == '--train'):
+        print("Reading", TRAINING_SIZE, "training image(s)")
+        trainset = DatasetPatched(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, TRAINING_SIZE, OVERLAY_SIZE, ROTATION)
+        trainloader = DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
 
-    ''' Predicting on the test images '''
-    filenames_list = test_and_save_predictions(model, test_imgs)
+        print("Reading", VAL_SIZE, "validation image(s)")
+        valset = DatasetPatched(TRAIN_IMAGE_PATH, TRAIN_GROUNDTRUTH_PATH, VAL_SIZE, OVERLAY_SIZE, ROTATION)
+        valloader = DataLoader(valset, batch_size=BATCH_SIZE, shuffle=True)
 
-    ''' create csv files '''
-    masks_to_submission(submissionFileName, filenames_list)
+        ''' Training phase '''
+        # TODO: optional, add: ReduceLROnPlateau
+        # TODO: optional, put early stopping
+        val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_acc_hist, val_acc_hist_std, train_acc_hist, train_acc_hist_std = training(network, criterion, optimizer, score, trainloader, valloader, PATCH_SIZE, NUM_EPOCHS)
+        print("Saving the model... ")
+        torch.save({'state_dict': network.state_dict()}, MODEL_PATH)
+    else:
+        print("Argument not recognized")
+        Usage()
 
-    ''' create label images from csv '''
-    for i in range(1, NR_TEST_IMAGES+1):
-        reconstruct_from_labels(i, submissionFileName)
+    print("Load testing data... ")
+    testset = TestDataset(TEST_IMAGE_PATH, NR_TEST_IMAGES)
+    loader_test = DataLoader(testset, batch_size=1, shuffle=False) # To do : increase the batch_size
 
-    print("Training loss = ", train_loss_hist)
-    print("Testing loss = ", val_loss_hist)
-    print("Training accuracy = ", train_acc_hist)
-    print("Testing accuracy = ", val_acc_hist)
+    print("Predict labels... ")
+    roadsPredicted = predict_test_images(network, loader_test)
 
+    # Transform pixel-wise prediction to patchwise
+    patched_images = patch_prediction(roadsPredicted, TEST_IMG_SIZE, IMG_PATCH_SIZE)
+
+    ''' Get patches for submission '''
+    patches = getPatches(patched_images)
+
+    ''' Generate submission '''
+    reconstruct_img(NR_TEST_IMAGES, TEST_IMG_SIZE, IMG_PATCH_SIZE, patches, PREDICTED_PATH)
+    submission_to_csv(SUBMISSION_PATH, PREDICTED_PATH)
+
+    print('See latest submission file ', SUBMISSION_PATH)
+    print('See predicted images at    ', PREDICTED_PATH)
 
 main()

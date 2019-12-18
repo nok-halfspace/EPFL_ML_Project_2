@@ -18,4 +18,10 @@ pip3 install -r requirements.txt
 
 How to train the neural network:   
   `cd scripts`   
-  `python3 run.py`   
+  `python3 run.py --train`     train and predict     
+  `python3 run.py --predict`   predict  test images    
+
+Requirements:
+
+* Python 3.6.9  
+* torch 1.3.1

@@ -1,166 +1,95 @@
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import f1_score
-import os
-import psutil
-from scipy import ndimage
-from PIL import Image
-import scipy.misc
-from constants import *
 import numpy as np
+from sklearn.metrics import f1_score
+import time
+from utils import *
+from constants import *
 
 
-# Chosen score : F1 metrics to be in accordance with AIcrowd
-
-def score(y_true, y_pred_onehot):
-    softMax = torch.nn.Softmax(1)
-    y_pred_bin = torch.argmax(softMax(y_pred_onehot),1).view(-1)
-    y_true = y_true.view(-1)
-    f1 = f1_score(y_true.cpu(), y_pred_bin.cpu())
-    return(f1)
-
-def split_data(x,y,ratio, seed = 1):
-
-    """split the dataset based on the split ratio."""
-    # set seed
-    np.random.seed(seed)
-    # generate random indices
-    num_img = x.shape[0]
-    indices = np.random.permutation(num_img)
-    index_split = int(np.floor(ratio * num_img))
-    index_tr = indices[: index_split]
-    index_val = indices[index_split:]
-    # create split
-    x_tr = x[index_tr]
-    x_val = x[index_val]
-    y_tr = y[index_tr]
-    y_val = y[index_val]
-    return x_tr, x_val, y_tr, y_val
+def score(labels, outputs):
+    predictions = probability_to_prediction(outputs).flatten()
+    labels = labels.squeeze().cpu().numpy().flatten()
+    f1 = f1_score(labels, predictions)
+    return f1
 
 
-def training(model, loss_function, optimizer, x, y, epochs, ratio):
-    val_loss_hist = []
-    val_acc_hist = []
-    train_acc_hist = []
-    train_loss_hist = []
+''' Training function '''
+#def training(num_epochs, model, criterion, optimizer, trainset, trainloader, patch_size):
+def training(model, criterion, optimizer, score, trainloader, valloader, patch_size, num_epochs):
+    # Log of the losses and scores
+    val_loss_hist, val_loss_hist_std, val_f1_hist, val_f1_hist_std = [], [], [], []
+    train_f1_hist, train_f1_hist_std, train_loss_hist, train_loss_hist_std = [], [], [], []
 
-    x, val_x, y, val_y = split_data(x, y, ratio)
-    process = psutil.Process(os.getpid())
+    unixEpoch = time.strftime("%s")
+    f = open("logfile_" + unixEpoch + ".txt", 'w')
 
-    for epoch in range(epochs):
+    print('Training the model...')
+    for epoch in range(num_epochs):
+        loss_value = []
+        correct = []
 
-        ''' Training '''
+        loss_value_val = []
+        correct_val = []
 
         model.train()
-        loss_value = 0.0
-        correct = 0.0
-        for i in range(0, x.shape[0], BATCH_SIZE):
+        step = 1
 
-            data_inputs = x[i:BATCH_SIZE+i].to(DEVICE)
-            data_targets = y[i:BATCH_SIZE+i].to(DEVICE)
+        for data in trainloader:
+            print("Epoch:", epoch+1, "/", num_epochs, " - Step", step, "/", len(trainloader))
+            step += 1
 
-            #Traning step
+            inputs, labels = data[0].to(DEVICE), data[1].to(DEVICE)
+
+            # Training step
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+
             optimizer.zero_grad()
-            outputs = model(data_inputs)
-            outputs = outputs[:,:,2:-2,2:-2]
-            loss = loss_function(outputs, data_targets)
-
-            correct += score(data_targets, outputs)
-
-            # HERE : Do data augmentation
-            data_input_numpy = data_inputs[0].cpu().numpy()
-            data_targets_numpy = data_targets.cpu().numpy()
-
-            # img = Image.fromarray(data_input_numpy.T, 'RGB') # if you want to check the initial image
-            # img.save('out.png')
-
-            print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
-
-            loss_rotated = 0
-            n_rotions = 3
-            for tetha in range(1, n_rotions+1):
-                angle = 20 * tetha
-                print("Rotating image", i," with ", angle, "degrees.")
-                print("Memory usage {0:.2f} GB".format(process.memory_info().rss/1024/1024/1024))
-                data_input_numpy_rotated = ndimage.rotate(data_input_numpy, angle, reshape=False, axes=(1,2), mode='reflect')
-                data_input_rotated = torch.tensor(data_input_numpy_rotated)
-                data_input_rotated = torch.unsqueeze(data_input_rotated, 0).to(DEVICE)
-                data_target_numpy_rotated = ndimage.rotate(data_targets_numpy, angle, reshape=False, axes=(1,2), mode='reflect')
-                data_target_rotated = torch.tensor(data_target_numpy_rotated).to(DEVICE)
-
-                # img = Image.fromarray(rotated_image.T, 'RGB') # if you want to check the rotations
-                # img.save('out_rotated.png')
-
-                print("Predict for rotated image", i, "with", angle, "degrees.")
-                outputs_rotated = model(data_input_rotated)
-                outputs_rotated = outputs_rotated[:,:,2:-2,2:-2]
-                loss_rotated += loss_function(outputs_rotated, data_target_rotated)
-                correct += score(data_target_rotated, outputs_rotated)
-
-            total_loss = loss + loss_rotated
-            total_loss.backward()
+            loss.backward()
             optimizer.step()
 
-            #Log
-            loss_value += total_loss.item()
+            loss_value.append(loss.item())
+            correct.append(score(labels, outputs))
 
-        loss_value = loss_value/((1+n_rotions)*x.shape[0])
-        accuracy = correct/((1+n_rotions)*x.shape[0])
+        loss_value, loss_value_std = np.mean(loss_value), np.std(loss_value)
+        f1,f1_std = np.mean(correct), np.std(correct)
 
-        ''' Validation '''
+        train_loss_hist.append(loss_value)
+        train_loss_hist_std.append(loss_value_std)
 
+        train_f1_hist.append(f1)
+        train_f1_hist_std.append(f1_std)
+
+        # Validation part
+        print("Validation at Epoch:", epoch + 1, "/", num_epochs)
         model.eval()
-        loss_val_value = 0.0
-        correct_val = 0
-        for i in range(0,val_x.shape[0],BATCH_SIZE):
-            data_val_inputs = val_x[i:BATCH_SIZE+i].to(DEVICE)
-            data_val_targets = val_y[i:BATCH_SIZE+i].to(DEVICE)
+        for data in valloader:
+            inputs, labels = data[0].to(DEVICE), data[1].to(DEVICE)
 
             with torch.no_grad():
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                loss_value_val.append(loss.item())
+                correct_val.append(score(labels, outputs))
 
-                outputs_val = model(data_val_inputs)
-
-                actual_outputs_val = outputs_val[:,:,2:-2,2:-2]
-                val_loss = loss_function(actual_outputs_val,data_val_targets)
-             # log
-            loss_val_value +=val_loss.item()
-
-            correct_val += score(data_val_targets,actual_outputs_val)
+        loss_validation, loss_validation_std = np.mean(loss_value_val), np.std(loss_value_val)
+        f1_validation, f1_validation_std = np.mean(correct_val), np.std(correct_val)
 
 
-        loss_val_value /= val_x.shape[0]
-        accuracy_val = correct_val/val_x.shape[0]
+        val_loss_hist.append(loss_validation)
+        val_loss_hist_std.append(loss_validation_std)
+        val_f1_hist.append(f1_validation)
+        val_f1_hist_std.append(f1_validation_std)
 
-        val_loss_hist.append(loss_val_value)
-        val_acc_hist.append(accuracy_val)
-        train_loss_hist.append(loss_value)
-        train_acc_hist.append(accuracy)
+        # Print at each epoch the evolution of quantities
+        print('Epoch {} \n \
+                Train loss: {} +/- {} \n \
+                Train F1: {} +/- {} \n \
+                Validation loss: {} +/- {} \n \
+                Validation F1: {} +/- {} \
+                '.format(epoch, loss_value, loss_value_std, f1, f1_std, loss_validation, loss_validation_std, f1_validation, f1_validation_std),
+                    file=f)
 
-        if DISPLAY:
-            print(f'Epoch {epoch}, loss: {loss_value:.5f}, accuracy: {accuracy:.3f}, Val_loss: {loss_val_value:.5f}, Val_acc: {accuracy_val:.3f}')
-
-        print(">> Saving Model for Epoch ", str(epoch))
-        checkpoint = {'model_state': model.state_dict(), 'optimizer_state': optimizer.state_dict()}
-        torch.save(checkpoint, './model')
-
-    return val_loss_hist,train_loss_hist,val_acc_hist,train_acc_hist
-
-
-#Plot the logs of the loss and accuracy on the train/validation set
-def plot_hist(val_loss_hist, train_loss_hist, val_acc_hist, train_acc_hist):
-    fig, (ax1, ax2) = plt.subplots(1, 2,figsize=(15,5))
-
-    ax1.set_ylabel('Loss')
-    ax2.set_ylabel('accuracy')
-
-    ax1.plot(train_loss_hist,label='training')
-    ax1.plot(val_loss_hist,label='validation')
-    ax1.set_yscale('log')
-    ax1.legend()
-
-    ax2.plot(train_acc_hist,label='training')
-    ax2.plot(val_acc_hist,label='validation')
-    ax2.legend()
-
-    plt.show()
+    return val_loss_hist, val_loss_hist_std, train_loss_hist, train_loss_hist_std, val_f1_hist, val_f1_hist_std, train_f1_hist, train_f1_hist_std

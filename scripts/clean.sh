@@ -1,4 +1,7 @@
 #/bin/bash
 
-rm -rf *.png
-rm -rf ../Datasets/Prediction/prediction_*
+# Clean up script
+
+rm -rf ../Datasets/predictions/*
+rm -rf logfile_*.txt
+rm -rf ../submissions/*
