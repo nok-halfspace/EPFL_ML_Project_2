@@ -29,7 +29,8 @@ Requirements:
 * torch 1.3.1
 * torchvision 0.4.2
 * sklearn 0.22
-* matplotlib 2.1.0   
+* matplotlib 2.1.0  
+* scikit-image 
 
 Optional   
 * torchsummary  (used to print neural network details)
