@@ -18,10 +18,16 @@ than install the dependencies
 
 How to train the neural network:   
   `cd scripts`   
-  `python3 run.py --train`     train and predict     
-  `python3 run.py --predict`   predict  test images    
+  `python3 run.py --train`     train and predict       
+  `python3 run.py --predict`   predict test images      
 
 Requirements:
-
 * Python 3.6.9  
 * torch 1.3.1
+* torchvision 0.4.2
+* sklearn 0.22
+* matplotlib 2.1.0   
+
+Optional   
+* torchsummary  (used to print neural network details)
+* psutil (used to print memory usage)
