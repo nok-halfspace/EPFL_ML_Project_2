@@ -1,7 +1,6 @@
 # functions were adapted from segment_aerial_images.ipynb provided by the EPFL ML course
 
 import numpy as np
-from imgaug import augmenters
 from skimage import img_as_ubyte, img_as_float
 from skimage.util import view_as_windows
 import os

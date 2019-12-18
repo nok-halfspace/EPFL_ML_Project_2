@@ -14,7 +14,8 @@ How to train the neural network:
 Install:    
 For Ubuntu 18.04 LTS run:     
 `sudo apt-get update`      
-`sudo apt install python3-pip`   
+`sudo apt install python3-pip`
+`sudo apt-get install python3-tk`  
 than ,    
 
 Install all the necessary dependencies:
