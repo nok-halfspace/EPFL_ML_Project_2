@@ -2,12 +2,12 @@ import torch
 import torchvision.transforms as transforms
 
 from PIL import Image
+import numpy as np
+from torch.autograd import Variable
+from utils import *
 from training import *
 from mask_to_submission import *
 from submission_to_mask import *
-import numpy as np
-from torch.autograd import Variable
-from helpers import probability_to_prediction
 
 def predict_test_images(model, loader):
     outputPredicted = []

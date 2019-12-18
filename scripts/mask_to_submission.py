@@ -1,5 +1,5 @@
 """
-Helpers functions for AICrowd submission generation 
+Helpers functions for AICrowd submission generation
 These functions were taken and adapted from mask_to_submission.py provided by the EPFL ML course
 """
 import os
@@ -51,7 +51,5 @@ def submission_to_csv(submission_path, predictions_path):
     image_filenames = []
     for i in range(1, 51):
         image_filename = predictions_path + 'satImage_' + '%.3d' % i + '.png'
-        print(image_filename)
         image_filenames.append(image_filename)
     masks_to_submission(submission_filename, *image_filenames)
-
