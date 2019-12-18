@@ -50,7 +50,7 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
             loss.backward()
             optimizer.step()
 
-            loss_value.append(loss.item() / BATCH_SIZE)
+            loss_value.append(loss.item())
             correct.append(score(labels, outputs))
 
         loss_value, loss_value_std = np.mean(loss_value), np.std(loss_value)
@@ -71,7 +71,7 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
             with torch.no_grad():
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
-                loss_value_val.append(loss.item() / BATCH_SIZE)
+                loss_value_val.append(loss.item())
                 correct_val.append(score(labels, outputs))
 
         loss_validation, loss_validation_std = np.mean(loss_value_val), np.std(loss_value_val)
