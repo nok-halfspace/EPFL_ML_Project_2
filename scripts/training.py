@@ -22,8 +22,8 @@ def training(model, criterion, optimizer, score, trainloader, valloader, patch_s
     val_loss_hist, val_loss_hist_std, val_f1_hist, val_f1_hist_std = [], [], [], []
     train_f1_hist, train_f1_hist_std, train_loss_hist, train_loss_hist_std = [], [], [], []
 
-    unixEpoch = time.strftime("%s")
-    f = open("logfile_" + unixEpoch + ".txt", 'w')
+    timestamp = time.strftime("%m:%d:%Y-%H:%M")
+    f = open("logfile_" + timestamp + ".txt", 'w')
 
     print('Training the model...')
     for epoch in range(num_epochs):
