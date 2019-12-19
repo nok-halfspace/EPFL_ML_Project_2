@@ -10,6 +10,8 @@ How to train the neural network:
   `python3 run.py --train`     train and predict       
   `python3 run.py --predict`   predict test images      
 
+See results by running in the same folder (`scripts`):    
+`python3 overlayPredictions.py`
 
 Install:    
 For Ubuntu 18.04 LTS run:     
