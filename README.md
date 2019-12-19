@@ -31,7 +31,6 @@ Requirements:
 * sklearn 0.22
 * matplotlib 2.1.0  
 * scikit-image
-* scikit-image
 
 Optional   
 * torchsummary  (used to print neural network details)

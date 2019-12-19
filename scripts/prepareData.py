@@ -55,34 +55,6 @@ def overlap(image, overlap_amount):
     return overlappedPatches
 
 
-""" Get patches from image + reflect """
-def patchify(image, patch_len):
-    resultingPatches = []
-    W, H = image.shape[0], image.shape[1]
-    image = reflect(image, patch_len)
-
-    for i in range(0, W, patch_len):
-        for j in range(0, H, patch_len):
-            if len(image.shape) == 2:
-                patch = image[j:j+patch_len, i:i+patch_len]
-            else:
-                patch = image[j:j+patch_len, i:i+patch_len, :]
-
-            resultingPatches.append(patch)
-
-    return resultingPatches
-
-
-""" Reflect right and bottom """
-def reflect(im, length):
-    W, H = im.shape[0], im.shape[1]
-    Rflipped = np.fliplr(im[:, W - length:]) if len(im.shape) == 2 else np.fliplr(im[:, W - length:, :])
-    reflected = np.concatenate((im, Rflipped), axis=1)
-    Bflipped = np.flipud(reflected[H - length:, :]) if len(im.shape) == 2 else np.flipud(reflected[H - length:, :, :])
-    reflected = np.concatenate((reflected, Bflipped), axis=0)
-    return reflected
-
-
 """ Read, rotate and patch images """
 def read_rotate_patch(images_path, groundTruthPath, training_size, overlap_amount, rotation):
     images = read_images(images_path, training_size, "satImage_")
@@ -98,7 +70,6 @@ def read_rotate_patch(images_path, groundTruthPath, training_size, overlap_amoun
             patches = zip(overlap(img, overlap_amount), overlap(label, overlap_amount))
             valid_img, valid_label = [], []
             for patch_img, patch_label in patches:
-                # if not is_corner(patch_img):
                 valid_img.append(patch_img)
                 valid_label.append(patch_label)
 
