@@ -7,6 +7,7 @@ Team:
 
 How to train the neural network:   
   `cd scripts`   
+  (place the images into training and test_set_images folders)    
   `python3 run.py --train`     train and predict       
   `python3 run.py --predict`   predict test images      
 
