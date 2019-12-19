@@ -8,8 +8,11 @@ Team:
 How to train the neural network:   
   `cd scripts`   
   (place the images into training and test_set_images folders)    
-  `python3 run.py --train`     train and predict       
-  `python3 run.py --predict`   predict test images      
+  `python3 run.py --train`     train and predict  
+
+Change the value of MODEL_PATH variable in `constants.py`:      
+`MODEL_PATH  = '../best_model.weights' `     
+`python3 run.py --predict`   predict test images      
 
 See results by running in the same folder (`scripts`):    
 `python3 overlayPredictions.py`
