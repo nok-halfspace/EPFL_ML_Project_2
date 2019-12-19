@@ -12,10 +12,8 @@ def img_float_to_uint8(img):
     rimg = (rimg / np.max(rimg) * 255).round().astype(np.uint8)
     return rimg
 
+""" Concatenate an image and its groundtruth. """
 def concatenate_images(img, gt_img):
-    """
-    Concatenate an image and its groundtruth.
-    """
     nChannels = len(gt_img.shape)
     w = gt_img.shape[0]
     h = gt_img.shape[1]
@@ -26,11 +24,8 @@ def concatenate_images(img, gt_img):
         cimg = np.concatenate((img8, gt_img_3c), axis=1)
     return cimg
 
-
+""" Overlay prediction on the aerial image. """
 def make_img_overlay(img, predicted_img):
-    """
-    Overlay prediction on the aerial image.
-    """
     w = img.shape[0]
     h = img.shape[1]
     color_mask = np.zeros((w, h, 3), dtype=np.uint8)

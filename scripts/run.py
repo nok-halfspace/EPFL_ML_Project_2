@@ -31,7 +31,7 @@ def main():
 
     if (sys.argv[1] == '--predict'):
         print("Loading the model... ")
-        checkpoint = torch.load(MODEL_PATH)
+        checkpoint = torch.load(BEST_MODEL_PATH)
         network.load_state_dict(checkpoint['state_dict'])
 
     elif (sys.argv[1] == '--train'):
